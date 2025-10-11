@@ -9,26 +9,19 @@
    - Environments: .env.local, .env
 
  [32m[1m✓[22m[39m Starting...
- [32m[1m✓[22m[39m Compiled middleware in 150ms
- [32m[1m✓[22m[39m Ready in 1049ms
+ [32m[1m✓[22m[39m Compiled middleware in 158ms
+ [32m[1m✓[22m[39m Ready in 1068ms
  [37m[1m○[22m[39m Compiling /wishlists ...
- [32m[1m✓[22m[39m Compiled /wishlists in 1626ms
+ [32m[1m✓[22m[39m Compiled /wishlists in 2.3s
 [page] render
- GET /wishlists [32m200[39m in 1984ms
- POST /wishlists [32m200[39m in 290ms
- [32m[1m✓[22m[39m Compiled /favicon.ico in 479ms
- GET /favicon.ico?favicon.0b3bf435.ico [32m200[39m in 647ms
- GET /api/wishlists [32m200[39m in 1893ms
- [32m[1m✓[22m[39m Compiled in 96ms
-[page] render
- GET /wishlists [32m200[39m in 226ms
- POST /wishlists [32m200[39m in 97ms
- GET /favicon.ico?favicon.0b3bf435.ico [32m200[39m in 330ms
- GET /api/wishlists [32m200[39m in 1625ms
- [32m[1m✓[22m[39m Compiled in 41ms
-[page] render
- GET /wishlists [32m200[39m in 181ms
- POST /wishlists [32m200[39m in 83ms
- GET /favicon.ico?favicon.0b3bf435.ico [32m200[39m in 322ms
- GET /api/wishlists [32m200[39m in 1458ms
+ GET /wishlists [32m200[39m in 2518ms
+ POST /wishlists [32m200[39m in 146ms
+ [32m[1m✓[22m[39m Compiled /favicon.ico in 409ms
+ GET /favicon.ico?favicon.0b3bf435.ico [32m200[39m in 568ms
+ GET /api/wishlists [32m200[39m in 2064ms
+ [32m[1m✓[22m[39m Compiled /wishlists/new in 236ms
+ GET /wishlists/new [32m200[39m in 264ms
+ POST /api/wishlists [33m409[39m in 1496ms
+ [32m[1m✓[22m[39m Compiled /sign-in/[[...sign-in]] in 267ms
+ GET /sign-in?redirect_url=http%3A%2F%2F192.168.3.120%3A3000%2Fwishlists [32m200[39m in 670ms
 [?25h
