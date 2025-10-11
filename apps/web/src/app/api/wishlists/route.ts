@@ -5,7 +5,7 @@ import { eq, desc, asc } from "drizzle-orm";
 import { db } from "@/db";
 import { ensureDbUser } from "@/lib/user";
 import { places, wishlists } from "@/db/schema";
-import { saveImageFromUrl } from "@/lib/images";
+// import { saveImageFromUrl } from "@/lib/images";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";  // ← 追加
@@ -70,6 +70,7 @@ export async function POST(req: Request) {
 
     // 期待ペイロード:
     // { place: { placeId, name, ... , imageKey? }, imageSrcUrl? }
+    const { saveImageFromUrl } = await import("@/lib/images");
     const body = (await req.json()) as {
       place: {
         placeId: string;
