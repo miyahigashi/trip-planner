@@ -1,10 +1,21 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+// apps/web/src/middleware.ts
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-export default clerkMiddleware();
+const isPublic = createRouteMatcher([
+  "/",
+  "/sign-in(.*)",
+  "/sign-up(.*)",
+  "/api/health(.*)",
+]);
+
+export default clerkMiddleware(async (auth, req) => {
+  if (isPublic(req)) return;
+  const session = await auth.protect();   // ← 保護 + サインイン済みの情報を取得
+  // session.userId などをここで利用可能
+});
 
 export const config = {
   matcher: [
-    // API や Next の静的ファイル等は除外
-    "/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
   ],
 };

@@ -13,12 +13,12 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",   // iPhoneのノッチ領域まで広げる
   maximumScale: 1,        // （任意）ピンチ拡大を抑えるなら
+  themeColor: "#ffffff",
 };
 
 export const metadata: Metadata = {
   title: "Trip Planner",
   description: "Plan trips and manage wishlists",
-  themeColor: "#0ea5e9",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

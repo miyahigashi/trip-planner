@@ -22,8 +22,10 @@ export async function OPTIONS(req: Request) {
 
   return new Response(null, { status: 204, headers });
 }
+
 // 取得
 export async function GET(req: Request) {
+  // return NextResponse.json({ ping: "ok" });
   try {
     const user = await ensureDbUser();
     const { searchParams } = new URL(req.url);
@@ -148,8 +150,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    const msg = String(e);
-    const code = msg.includes("UNAUTHENTICATED") ? 401 : 500;
+    const msg = String(e ?? "");
+    const isAuthErr = /UNAUTHENTICATED|Unauthorized|Unauthenticated|No\s*session|No\s*current\s*user/i.test(msg);
+    const code = isAuthErr ? 401 : 500;
+    console.error("[/api/wishlists] ERROR:", e);
     return NextResponse.json({ ok: false, error: msg }, { status: code });
   }
 }
