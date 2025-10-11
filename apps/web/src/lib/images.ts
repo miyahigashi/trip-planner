@@ -43,6 +43,7 @@ export async function saveImageFromUrl(srcUrl: string): Promise<SavedImage> {
   const { default: sharp } = await import("sharp");
 
   const u = new URL(srcUrl);
+  console.log("[saveImageFromUrl] host =", u.hostname);
   if (!ALLOW_HOSTS.has(u.hostname)) throw new Error("host not allowed");
 
   const resp = await fetch(srcUrl, { cache: "no-store", redirect: "follow" });

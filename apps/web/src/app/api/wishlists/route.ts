@@ -128,6 +128,7 @@ export async function POST(req: Request) {
     let finalKey: string | null = p.imageKey ?? null;
 
     if (!finalKey && body.imageSrcUrl) {
+      console.log("[wishlists:POST] saveImageFromUrl src =", body.imageSrcUrl);
       // 既存に key が未設定のときだけ保存してセット
       const [row] = await db
         .select({ imageUrl: places.imageUrl })
@@ -139,6 +140,7 @@ export async function POST(req: Request) {
         try {
           const saved = await saveImageFromUrl(body.imageSrcUrl);
           finalKey = saved.w800Key; // 一覧表示用には w800 を採用
+          console.log("[wishlists:POST] saved image key =", finalKey);
         } catch (e) {
           console.warn("[POST /api/wishlists] saveImageFromUrl failed:", e);
         }
