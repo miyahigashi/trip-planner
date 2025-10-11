@@ -150,7 +150,22 @@ export default function FloatingFilter(props: Props) {
                           onChange={() => togglePref(p)}
                         />
                         <span className="flex-1">{p}</span>
-                        <span className="text-xs text-gray-500">{cnt}</span>
+                        {/* <span className="text-xs text-gray-500">{cnt}</span> */}
+                        {/* ← 数字バッジ */}
+                        <span
+                          className={[
+                            "ml-2 inline-flex min-w-[1.5rem] justify-center rounded-full px-1.5 text-xs font-semibold tabular-nums",
+                            checked
+                              ? "bg-sky-600 text-white"
+                              : cnt > 0
+                                ? "bg-sky-100 text-sky-700"
+                                : "bg-gray-100 text-gray-400"
+                          ].join(" ")}
+                          aria-label={`${p} の件数`}
+                          title={`${p} の件数`}
+                        >
+                          {cnt}
+                        </span>
                       </label>
                     );
                   })}
