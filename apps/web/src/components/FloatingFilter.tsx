@@ -21,6 +21,8 @@ type Props = {
   typeOptions: string[];
   resultCount: number;
   className?: string;
+  regionCounts: Record<string, number>;
+  prefectureCounts: Record<string, number>;
 };
 
 export default function FloatingFilter(props: Props) {
@@ -110,8 +112,19 @@ export default function FloatingFilter(props: Props) {
                   }}
                   className="w-full rounded-lg border px-3 py-2"
                 >
-                  <option value="">指定なし</option>
-                  {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                  <option value="">
+                    指定なし（
+                    {Object.values(props.regionCounts).reduce((a, b) => a + b, 0)}
+                    ）
+                  </option>
+                  {REGIONS.map(r => {
+                    const c = props.regionCounts[r] ?? 0;
+                    return (
+                      <option key={r} value={r}>
+                        {r}（{c}）
+                      </option>
+                    );
+                  })}
                 </select>
               </label>
 
@@ -127,6 +140,7 @@ export default function FloatingFilter(props: Props) {
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 max-h-48 overflow-auto pr-1">
                   {filteredPrefs.map(p => {
                     const checked = (props.filters.prefectures ?? []).includes(p);
+                    const cnt = props.prefectureCounts[p] ?? 0;
                     return (
                       <label key={p} className="flex items-center gap-2 text-sm">
                         <input
@@ -135,7 +149,8 @@ export default function FloatingFilter(props: Props) {
                           checked={checked}
                           onChange={() => togglePref(p)}
                         />
-                        <span>{p}</span>
+                        <span className="flex-1">{p}</span>
+                        <span className="text-xs text-gray-500">{cnt}</span>
                       </label>
                     );
                   })}

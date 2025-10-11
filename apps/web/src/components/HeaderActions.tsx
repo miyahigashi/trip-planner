@@ -29,7 +29,7 @@ export default function HeaderActions() {
 
       {/* デスクトップ：Wishlists（ラベル） */}
       <Link href="/wishlists" className={`${baseBtn} px-3 py-2 text-sm hidden md:inline-flex`}>
-        🏠 Wishlists
+        📌 Wishlists
       </Link>
 
       {/* モバイル：マップ（アイコンのみ） */}

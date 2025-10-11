@@ -39,6 +39,7 @@ const photoUrl = (ref: string | null) =>
     : "/placeholder.jpg";
 
 export default function WishlistsPage() {
+  
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -91,6 +92,46 @@ export default function WishlistsPage() {
       return true;
     });
   }, [items, filters]);
+  // 地方・都道府県以外の条件だけを適用した集合（件数の母集団）
+  const baseFiltered = useMemo(() => {
+    const q = filters.q.trim().toLowerCase();
+    return items.filter(it => {
+      if (q) {
+        const hay = `${it.name} ${it.address ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      if (filters.minRating > 0 && (it.rating ?? 0) < filters.minRating) return false;
+      if (filters.withPhoto && !(it.imageKey || it.photoRef)) return false;
+      if (filters.type && !(it.types ?? []).includes(filters.type)) return false;
+      return true;         // ★ region/prefectures は“数える軸”なので除外
+    });
+  }, [items, filters.q, filters.minRating, filters.withPhoto, filters.type]);
+
+  // 地方ごとの件数
+  
+  // 地方ごとの件数
+  const regionCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const it of baseFiltered) {
+      const r = it.prefecture ? PREF_TO_REGION[it.prefecture] : undefined;
+      if (r) m[r] = (m[r] ?? 0) + 1;
+    }
+    return m;
+  }, [baseFiltered]);
+
+  // 都道府県ごとの件数
+  const prefectureCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const it of baseFiltered) {
+      const p = it.prefecture;
+      if (p) m[p] = (m[p] ?? 0) + 1;
+    }
+    return m;
+  }, [baseFiltered]);
+  useEffect(() => {
+    console.log("[page] regionCounts", regionCounts);
+    console.log("[page] prefectureCounts", prefectureCounts);
+  }, [regionCounts, prefectureCounts]);
 
   const activeCount =
     (filters.q ? 1 : 0) +
@@ -114,9 +155,9 @@ export default function WishlistsPage() {
         credentials: "include",
         cache: "no-store",
       });
-      console.log("GET /api/wishlists status", res.status);
+      // console.log("GET /api/wishlists status", res.status);
       const data = await res.json();
-      console.log("payload", data);
+      // console.log("payload", data);
       setItems(data.items ?? []);
     } finally {
       setLoading(false);
@@ -195,6 +236,8 @@ export default function WishlistsPage() {
             typeOptions={typeOptions}
             resultCount={filteredItems.length}
             className="top-[calc(env(safe-area-inset-top)+80px)] right-6 !bottom-auto"
+            regionCounts={regionCounts}
+            prefectureCounts={prefectureCounts}
           />
         </div>
       </div>
