@@ -7,6 +7,7 @@ import { sql } from "drizzle-orm";
 
 export const runtime = "nodejs"; // 念のため Edge ではなく Node で
 
+
 export async function GET() {
   const { userId } = await auth();  // 本番で正しい userId が取れてるかを確認
   let count = null;

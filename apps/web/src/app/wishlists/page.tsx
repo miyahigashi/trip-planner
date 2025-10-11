@@ -109,11 +109,14 @@ export default function WishlistsPage() {
   }, [isFilterOpen]);
   const load = useCallback(async () => {
     try {
+      
       const res = await fetch("/api/wishlists", {
         credentials: "include",
         cache: "no-store",
       });
+      console.log("GET /api/wishlists status", res.status);
       const data = await res.json();
+      console.log("payload", data);
       setItems(data.items ?? []);
     } finally {
       setLoading(false);

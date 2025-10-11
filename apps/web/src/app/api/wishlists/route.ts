@@ -1,4 +1,5 @@
 // apps/web/src/app/api/wishlists/route.ts
+
 import { NextResponse } from "next/server";
 import { eq, desc, asc } from "drizzle-orm";
 import { db } from "@/db";
@@ -7,6 +8,8 @@ import { places, wishlists } from "@/db/schema";
 import { saveImageFromUrl } from "@/lib/images";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";  // ← 追加
+export const revalidate = 0;             // ← 追加
 
 export async function OPTIONS(req: Request) {
   const origin = req.headers.get("origin") ?? "";
