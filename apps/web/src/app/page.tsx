@@ -25,7 +25,7 @@ export default async function HomePage() {
 
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
-              href={userId ? "/trips/new" : "/sign-in"}
+              href={userId ? "/wishlists" : "/sign-in"}
               className="rounded-xl bg-sky-600 text-white px-5 py-3 shadow-lg hover:bg-sky-700"
             >
               ✨ {userId ? "旅を計画する" : "サインインしてはじめる"}
@@ -48,7 +48,7 @@ export default async function HomePage() {
 
       <section className="mx-auto max-w-6xl px-4 pb-16 grid gap-10">
         {/* 続きから */}
-        <Section title="🧳 続きから" moreHref="/trips">
+        <Section title="🧳 続きから" moreHref="/wishlists">
           {data.trips.length ? (
             <Cards cols="4">
               {data.trips.map((t) => (
@@ -82,7 +82,7 @@ export default async function HomePage() {
               title={userId ? "まだ旅程がありません" : "サインインして旅をつくろう"}
               hint={userId ? "ウィッシュリストから作成もおすすめ。" : undefined}
               action={{
-                href: userId ? "/trips/new" : "/sign-in",
+                href: userId ? "/wishlists" : "/sign-in",
                 label: userId ? "最初の旅を作る ✨" : "サインイン",
               }}
             />

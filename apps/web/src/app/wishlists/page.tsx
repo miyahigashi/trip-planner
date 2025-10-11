@@ -39,7 +39,11 @@ const photoUrl = (ref: string | null) =>
     : "/placeholder.jpg";
 
 export default function WishlistsPage() {
-  
+  console.log("[page] render"); // レンダー毎
+
+  useEffect(() => {
+    console.log("[page] mounted"); // 初回マウント時
+  }, []);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
