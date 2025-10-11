@@ -1,0 +1,45 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:lan": "next dev --hostname 192.168.3.120 --port 3000",
+    "dev": "next dev --turbopack",
+    "build": "next build --turbopack",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "db:generate": "drizzle-kit generate --config=drizzle.config.ts",
+    "db:migrate": "dotenv -e .env.local -- drizzle-kit migrate --config=drizzle.config.ts",
+    "db:studio": "dotenv -e .env.local -- drizzle-kit studio --config=drizzle.config.ts"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^6.33.3",
+    "@google-cloud/storage": "^7.17.2",
+    "@googlemaps/js-api-loader": "^2.0.1",
+    "@googlemaps/markerclusterer": "^2.6.2",
+    "@upstash/redis": "^1.35.5",
+    "drizzle-orm": "^0.44.6",
+    "next": "15.5.4",
+    "pg": "^8.16.3",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "sharp": "^0.34.4",
+    "zod": "^4.1.11"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/google.maps": "^3.58.1",
+    "@types/node": "^20",
+    "@types/pg": "^8.15.5",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.1",
+    "dotenv-cli": "^7.4.2",
+    "drizzle-kit": "^0.31.5",
+    "eslint": "^9",
+    "eslint-config-next": "15.5.4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
