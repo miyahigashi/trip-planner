@@ -8,6 +8,20 @@ import { saveImageFromUrl } from "@/lib/images";
 
 export const runtime = "nodejs";
 
+export async function OPTIONS(req: Request) {
+  const origin = req.headers.get("origin") ?? "";
+  // 同一オリジンなら最低限 204 返せば十分。外部ドメインから叩くなら CORS ヘッダも付与
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  };
+  // 外部から叩く想定があるときだけ許可（同一オリジンのみなら不要）
+  if (origin) headers["Access-Control-Allow-Origin"] = origin;
+  // Cookie を使う場合は以下を付ける（Allow-Origin に * は使えない点に注意）
+  headers["Access-Control-Allow-Credentials"] = "true";
+
+  return new Response(null, { status: 204, headers });
+}
 // 取得
 export async function GET(req: Request) {
   try {

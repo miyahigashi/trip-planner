@@ -48,8 +48,24 @@ export default function PlacesSearch({
 }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [hasValue, setHasValue] = useState<boolean>(!!defaultValue);
-  
-
+  let mapsConfigured = false; // ← モジュールスコープ
+  useEffect(() => {
+    (async () => {
+      if (!mapsConfigured) {
+        await setOptions({
+          key: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+          v: "weekly",
+          libraries: ["places"],
+          language: "ja",
+          region: "JP",
+        });
+        mapsConfigured = true;
+      }
+      const { Autocomplete } =
+        (await importLibrary("places")) as google.maps.PlacesLibrary;
+      // ... 略 ...
+    })();
+  }, []);
   useEffect(() => {
     let cleanup = () => {};
     let listener: google.maps.MapsEventListener | null = null;
