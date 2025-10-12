@@ -3,7 +3,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    // まずは domains だけでシンプルに
     domains: [
       "storage.googleapis.com",
       "maps.googleapis.com",
@@ -11,8 +10,15 @@ const nextConfig: NextConfig = {
       "picsum.photos",
     ],
   },
+  experimental: {
+    // ← これを追加
+    serverComponentsExternalPackages: [
+      "sharp",
+      "@img/sharp-linux-x64",
+      "@img/sharp-libvips-linux-x64",
+    ],
+  },
 };
 
-console.log("[next.config.ts] images =", nextConfig.images); // 🔍 ここがターミナルに出る
-
+// console.log は無くても OK（ビルドログに出るだけ）
 export default nextConfig;
