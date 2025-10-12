@@ -235,8 +235,8 @@ export default function WishlistsPage() {
   }
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="mx-auto max-w-7xl px-4 py-6 pb-[max(env(safe-area-inset-bottom),24px)] space-y-4">
+    <div className="px-4 pt-2 pb-6">
+      <div className="mx-auto max-w-7xl py-2">
         <div className="flex justify-end">
           <FloatingFilter
             activeCount={activeCount}
