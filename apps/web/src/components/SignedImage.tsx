@@ -9,11 +9,6 @@ export default function SignedImage({ objectKey, alt, width, height, className }
       ? objectKey
       : `https://storage.googleapis.com/${process.env.NEXT_PUBLIC_GCS_BUCKET}/${objectKey}`;
 
-  // 🔍 ここでブラウザのコンソールに実際の URL を出す
-  // if (typeof window !== "undefined") {
-  //   console.log("[SignedImage] src =", src);
-  // }
-
   return (
     <Image
       src={src}
