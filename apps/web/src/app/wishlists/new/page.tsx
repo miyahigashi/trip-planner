@@ -187,21 +187,29 @@ export default function NewWishlistPage() {
                 />
               </label>
 
-              <div className="mt-4 flex justify-end gap-2">
-                <button
-                  className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
-                  onClick={() => setOpen(false)}
-                  disabled={submitting}
+              <div
+                className="sticky bottom-0 -m-5 mt-4 border-t bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/70"
+              >
+                <div
+                  className="flex justify-end gap-2 p-4"
+                  // iPhone のホームバーぶんの余白を必ず確保
+                  style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)" }}
                 >
-                  キャンセル
-                </button>
-                <button
-                  className="rounded-lg bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-700 disabled:opacity-50"
-                  onClick={handleConfirmAdd}
-                  disabled={submitting}
-                >
-                  {submitting ? "追加中…" : "この内容で追加"}
-                </button>
+                  <button
+                    className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
+                    onClick={() => setOpen(false)}
+                    disabled={submitting}
+                  >
+                    キャンセル
+                  </button>
+                  <button
+                    className="rounded-lg bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-700 disabled:opacity-50"
+                    onClick={handleConfirmAdd}
+                    disabled={submitting}
+                  >
+                    {submitting ? "追加中…" : "この内容で追加"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
