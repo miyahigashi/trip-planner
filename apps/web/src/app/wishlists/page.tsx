@@ -219,6 +219,18 @@ export default function WishlistsPage() {
     },
     [items]
   );
+  useEffect(() => {
+    // 中身のない overlay root が残っていたら除去
+    document.querySelectorAll<HTMLElement>('.app-overlay-root').forEach(n => {
+      if (!n.firstElementChild) n.remove();
+    });
+    // 念のため body 固定も解除
+    document.body.style.position = "";
+    document.body.style.top = "";
+    document.body.style.left = "";
+    document.body.style.right = "";
+    document.body.style.width = "";
+  }, []);
 
   if (loading) {
     return (
@@ -376,26 +388,32 @@ export default function WishlistsPage() {
         </div>
       )} */}
       {confirmTarget && (
-        <Portal>
-          <div role="dialog" aria-modal="true"
-              className="fixed left-0 right-0 
-                          top-[env(safe-area-inset-top)] 
-                          bottom-[env(safe-area-inset-bottom)]
-                          z-[100]">
-            {/* backdrop */}
-            <div className="absolute inset-0 bg-black/40"
-                onClick={() => setConfirmTarget(null)} />
+        // 外枠は pointer-events を無効化
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 app-overlay-root"   // ← ここ大事
+        >
+          {/* 背景。クリックで閉じるので auto */}
+          <button
+            type="button"
+            aria-label="モーダルを閉じる"
+            className="absolute inset-0 bg-black/40 pointer-events-auto"
+            onClick={() => setConfirmTarget(null)}
+          />
 
-            {/* dialog */}
-            <div className="absolute inset-x-0 top-1/2 mx-auto w-[92%] max-w-md 
-                            -translate-y-1/2 rounded-2xl bg-white p-5 shadow-xl">
+          {/* 本体。ここから内側は操作可 */}
+          <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-auto">
+            <div className="w-[92%] max-w-md rounded-2xl bg-white p-5 shadow-xl">
               <h3 className="text-base font-semibold">本当に削除しますか？</h3>
               <p className="mt-2 text-sm text-gray-600">
                 「{confirmTarget.name}」をウィッシュリストから削除します。
               </p>
               <div className="mt-4 flex justify-end gap-2">
-                <button className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50"
-                        onClick={() => setConfirmTarget(null)}>
+                <button
+                  className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50"
+                  onClick={() => setConfirmTarget(null)}
+                >
                   キャンセル
                 </button>
                 <button
@@ -411,7 +429,7 @@ export default function WishlistsPage() {
               </div>
             </div>
           </div>
-        </Portal>
+        </div>
       )}
 
 

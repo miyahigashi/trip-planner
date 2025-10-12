@@ -24,3 +24,19 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Clerk のポータルルート自体はクリックを受けない */
+:where(body) > :where(#clerk-components) {
+  pointer-events: none !important;
+}
+
+/* 中に本物のモーダルが入るときは、その要素側で pointer-events が付くので操作できます */
+:where(#clerk-components) * {
+  pointer-events: auto;
+}
+
+/* 念のため、全画面・最大 z-index の匿名 DIV がいたら無効化（Clerk の一部環境で出る） */
+:where(body) > div[style*="position: fixed"][style*="inset: 0"][style*="z-index: 2147483647"] {
+  pointer-events: none !important;
+  /* 背景を暗くする用途ではないので視覚はそのまま */
+}
