@@ -326,16 +326,14 @@ export default function WishlistsPage() {
               {/* アクション */}
               <div className="mt-4 flex items-center justify-between">
                 <button
-                  className="text-[13px] font-medium text-sky-700 underline underline-offset-2 hover:text-sky-900"
+                  type="button"
                   onClick={() =>
-                    setEditTarget({
-                      placeId: p.placeId,
-                      name: p.name,
-                      note: p.note ?? "",
-                    })
+                    setEditTarget({ placeId: p.placeId, name: p.name, note: p.note ?? "" })
                   }
+                  aria-label={`${p.name} のメモを編集`}
+                  className="inline-flex min-h-9 items-center rounded-lg border px-3 text-sm hover:bg-gray-50 disabled:opacity-50"
                 >
-                  {p.note ? "メモを編集" : "＋ メモを追加"}
+                  編集
                 </button>
 
                 <button

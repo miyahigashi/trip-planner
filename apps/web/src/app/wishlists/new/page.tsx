@@ -3,13 +3,10 @@
 
 import { useCallback, useState, useEffect,useRef } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import PlacesSearch, { FoundPlace } from "@/components/PlacesSearch";
 
 /* ========= helpers ========= */
 
-const photoUrl = (src?: string | null) =>
-  src ?? "/placeholder.jpg";
 
 // 簡易の星表示
 function Stars({

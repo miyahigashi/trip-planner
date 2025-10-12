@@ -1,12 +1,33 @@
+// apps/web/src/app/page.tsx
+export const revalidate = 0;
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { fetchHomeData } from "../lib/home-data";
-import { currentUser } from "@clerk/nextjs/server";
+import { unstable_noStore as noStore } from 'next/cache';
+import Image from "next/image";
+import SignedImage from "@/components/SignedImage";
 
 export default async function HomePage() {
+  console.log("[HomePage] render start"); 
+  noStore();
   const session = await auth();
   const userId = session?.userId ?? null;
+  console.time("[HomePage] fetchHomeData");
   const data = await fetchHomeData(userId ?? null);
+  console.log("[HomePage] userId =", userId);
+  console.timeEnd("[HomePage] fetchHomeData");
+  console.log("[HomePage] counts", {
+    trips: data.trips?.length ?? -1,
+    wishes: data.wishes?.length ?? -1,
+    firstWish: data.wishes?.[0] ?? null,
+  });
+
+const photoUrl = (ref?: string | null) =>
+  ref
+    ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${ref}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+    : "/placeholder.jpg";
 
   return (
     <main className="min-h-dvh bg-gradient-to-b from-sky-200/60 via-white to-amber-50">
@@ -100,16 +121,23 @@ export default async function HomePage() {
                 >
                   <div className="aspect-[4/3] bg-slate-100 overflow-hidden">
                     {w.imageUrl ? (
-                      <img
-                        src={w.imageUrl}
-                        alt=""
+                      <SignedImage
+                        objectKey={w.imageUrl}            // ← "images/.../w800.webp"
+                        alt={w.name ?? "スポット"}
+                        width={800}
+                        height={600}
                         className="h-full w-full object-cover"
-                        loading="lazy"
+                      />
+                    ) : w.photoRef ? (
+                      <Image
+                        src={photoUrl(w.photoRef)}
+                        alt={w.name ?? "スポット"}
+                        width={800}
+                        height={600}
+                        className="h-full w-full object-cover"
                       />
                     ) : (
-                      <div className="grid h-full w-full place-items-center text-slate-400">
-                        No Photo
-                      </div>
+                      <div className="grid h-full w-full place-items-center text-slate-400">No Photo</div>
                     )}
                   </div>
                   <div className="p-3">

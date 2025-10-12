@@ -1,7 +1,9 @@
+// apps/web/src/components/FloatingFilter.tsx
 "use client";
 import Portal from "./Portal";
 import { cn } from "@/lib/utils";
 import { REGIONS, PREFECTURES, PREF_TO_REGION } from "@/lib/regions";
+import { typeToJa } from "@/lib/place-types";
 
 type Filters = {
   q: string;
@@ -208,7 +210,15 @@ export default function FloatingFilter(props: Props) {
                   className="w-full rounded-lg border px-3 py-2"
                 >
                   <option value="">指定なし</option>
-                  {props.typeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                  {/* 表示は日本語、値は英語type */}
+                  {props.typeOptions
+                    .slice()
+                    .sort((a, b) => typeToJa(a).localeCompare(typeToJa(b), "ja"))
+                    .map(t => (
+                      <option key={t} value={t}>
+                        {typeToJa(t)}
+                      </option>
+                    ))}
                 </select>
               </label>
             </div>

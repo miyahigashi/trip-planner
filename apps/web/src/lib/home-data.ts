@@ -1,24 +1,32 @@
 // apps/web/src/lib/home-data.ts
-import { db } from "../db/client"; // 相対パスにするなら: "../db/client"
-import { trips, wishlists, places } from "../db/schema";
+import { db } from "../db/client";
+import { trips, wishlists, places, users } from "../db/schema"; // ★ users(=profiles等)を追加
 import { desc, eq, sql } from "drizzle-orm";
+import { unstable_noStore as noStore } from "next/cache";
 
-/**
- * トップ画面用データ取得
- * - 最近更新の旅 4件
- * - 最近保存したスポット 6件（wishlists → places join）
- * - あなたへのおすすめ（trips.tags 上位3つ）
- */
-export async function fetchHomeData(userId: string | null) {
-  if (!userId) {
-    return { trips: [] as typeof trips.$inferSelect[], wishes: [] as any[], topTags: [] as string[] };
+export async function fetchHomeData(clerkUserId: string | null) {
+  noStore();
+  if (!clerkUserId) return { trips: [], wishes: [], topTags: [] as string[] };
+
+  // 1) Clerk ID -> 内部UUID
+  const u = await db
+    .select({ id: users.id })                 // users.id は UUID
+    .from(users)
+    .where(eq(users.clerkUserId, clerkUserId))// users.clerkUserId は "user_..." 文字列
+    .limit(1);
+
+  const internalUserId = u[0]?.id;
+  if (!internalUserId) {
+    console.warn("[home-data] no internal user for", clerkUserId);
+    return { trips: [], wishes: [], topTags: [] as string[] };
   }
 
+  // 2) UUIDで絞る
   const [t, w, tagsRes] = await Promise.all([
     db
       .select()
       .from(trips)
-      .where(eq(trips.ownerId, userId))
+      .where(eq(trips.ownerId, internalUserId))
       .orderBy(desc(trips.updatedAt))
       .limit(4),
 
@@ -27,12 +35,12 @@ export async function fetchHomeData(userId: string | null) {
         id: wishlists.id,
         createdAt: wishlists.createdAt,
         name: places.name,
-        imageUrl: places.imageUrl,
+        imageUrl: places.imageUrl, // 例: "images/.../w800.webp" （GCSのオブジェクトキー）
+        photoRef: places.photoRef, // 例: Google Places の photo_reference
       })
       .from(wishlists)
       .leftJoin(places, eq(wishlists.placeId, places.placeId))
-      // wishlists.userId が uuid のため text にキャストして比較
-      .where(sql`${wishlists.userId}::text = ${userId}`)
+      .where(eq(wishlists.userId, internalUserId)) // ★ UUID同士で比較
       .orderBy(desc(wishlists.createdAt))
       .limit(6),
 
@@ -40,7 +48,7 @@ export async function fetchHomeData(userId: string | null) {
       with ut as (
         select unnest(coalesce(${trips.tags}, '{}')) as tag
         from ${trips}
-        where ${trips.ownerId} = ${userId}
+        where ${trips.ownerId} = ${internalUserId}
       )
       select array(
         select tag from (
