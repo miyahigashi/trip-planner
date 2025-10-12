@@ -1,7 +1,7 @@
 // apps/web/src/app/api/wishlists/route.ts
 
 import { NextResponse } from "next/server";
-import { eq, desc, asc } from "drizzle-orm";
+import { eq, desc, asc, and } from "drizzle-orm";
 import { db } from "@/db";
 import { ensureDbUser } from "@/lib/user";
 import { places, wishlists } from "@/db/schema";
@@ -48,6 +48,7 @@ export async function GET(req: Request) {
         photoRef: places.photoRef,
         imageKey: places.imageUrl,
         prefecture: places.prefecture,
+        note: wishlists.note,
       })
       .from(wishlists)
       .innerJoin(places, eq(wishlists.placeId, places.placeId))
@@ -65,13 +66,10 @@ export async function GET(req: Request) {
 
 // 追加（place upsert + wishlist upsert）
 export async function POST(req: Request) {
-  
   try {
     const user = await ensureDbUser();
-
-    // 期待ペイロード:
-    // { place: { placeId, name, ... , imageKey? }, imageSrcUrl? }
     const { saveImageFromUrl } = await import("@/lib/images");
+
     const body = (await req.json()) as {
       place: {
         placeId: string;
@@ -85,16 +83,17 @@ export async function POST(req: Request) {
         photoRef?: string | null;
         imageKey?: string | null;
         prefecture?: string | null;
+        note?: string | null; // ← そのまま
       };
-      imageSrcUrl?: string | null;     // ★ 元画像URL（Placesの写真URLなど）
+      imageSrcUrl?: string | null;
     };
-    
+
     const p = body.place;
     if (!p?.placeId || !p?.name) {
-      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+      return NextResponse.json({ ok: false, error: "Invalid payload" }, { status: 400 });
     }
 
-    // 1) places upsert（存在しなければ作成／存在すれば何もしない）
+    // 1) places upsert
     await db
       .insert(places)
       .values({
@@ -111,26 +110,29 @@ export async function POST(req: Request) {
       })
       .onConflictDoNothing();
 
-    // 2) wishlists を upsert（重複なら 409）
+    // 2) wishlists upsert（重複時は note を更新）
     const inserted = await db
       .insert(wishlists)
-      .values({ userId: user.id, placeId: p.placeId })
+      .values({ userId: user.id, placeId: p.placeId, note: p.note ?? null })
       .onConflictDoNothing()
       .returning({ placeId: wishlists.placeId });
 
     if (inserted.length === 0) {
-      // 既にこの userId/placeId の wishlist が存在
-      return NextResponse.json({ ok: false, error: "Already すでにウィッシュリストに登録されています" }, { status: 409 });
+      // 既存がある → note が送られていれば更新
+      if (p.note !== undefined) {
+        await db
+          .update(wishlists)
+          .set({ note: p.note })
+          .where(
+            and(eq(wishlists.userId, user.id), eq(wishlists.placeId, p.placeId))
+          );
+      }
+      // 既存でも画像処理は続ける（初回未保存の可能性があるため）
     }
 
-    // 3) 画像 key の確定
-    //    - 優先: place.imageKey（クライアントで既に fetch-and-save 済み）
-    //    - 次点: imageSrcUrl があればサーバーで保存して key を生成
+    // 3) 画像 key の確定（既存ロジックのまま）
     let finalKey: string | null = p.imageKey ?? null;
-    console.log("[wishlists:POST] imageSrcUrl =", body.imageSrcUrl);
     if (!finalKey && body.imageSrcUrl) {
-      console.log("[wishlists:POST] saveImageFromUrl src =", body.imageSrcUrl);
-      // 既存に key が未設定のときだけ保存してセット
       const [row] = await db
         .select({ imageUrl: places.imageUrl })
         .from(places)
@@ -140,28 +142,20 @@ export async function POST(req: Request) {
       if (!row?.imageUrl) {
         try {
           const saved = await saveImageFromUrl(body.imageSrcUrl);
-          finalKey = saved.w800Key; // 一覧表示用には w800 を採用
-          console.log("[wishlists:POST] saved key =", saved.w800Key);
-          console.log("[wishlists:POST] saved image key =", finalKey);
+          finalKey = saved.w800Key;
         } catch (e) {
           console.warn("[POST /api/wishlists] saveImageFromUrl failed:", e);
         }
       }
     }
-
     if (finalKey) {
-      await db
-        .update(places)
-        .set({ imageUrl: finalKey })
-        .where(eq(places.placeId, p.placeId));
+      await db.update(places).set({ imageUrl: finalKey }).where(eq(places.placeId, p.placeId));
     }
-    
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     const msg = String(e ?? "");
     const isAuthErr = /UNAUTHENTICATED|Unauthorized|Unauthenticated|No\s*session|No\s*current\s*user/i.test(msg);
-    const code = isAuthErr ? 401 : 500;
-    console.error("[/api/wishlists] ERROR:", e);
-    return NextResponse.json({ ok: false, error: msg }, { status: code });
+    return NextResponse.json({ ok: false, error: msg }, { status: isAuthErr ? 401 : 500 });
   }
 }

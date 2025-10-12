@@ -69,9 +69,8 @@ export default function HeaderActions() {
                    shadow-[0_6px_20px_-6px_rgba(14,165,233,.6)]
                    hover:brightness-110 focus-visible:outline-none
                    focus-visible:ring-2 focus-visible:ring-sky-500"
-      >
-        ＋ Wishlistsに追加
-      </AddWishlistLink>
+                   label="Wishlistsに追加"
+      />
     </nav>
   );
 }

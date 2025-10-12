@@ -90,9 +90,7 @@ export default function FooterActions() {
 
             <AddWishlistLink
               className="inline-flex items-center rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-sky-500 to-teal-500 shadow-[0_10px_24px_-10px_rgba(14,165,233,.7)] hover:brightness-110"
-            >
-              ＋ Wishlistsに追加
-            </AddWishlistLink>
+            label="Wishlistsに追加"/>
           </nav>
         </div>
       </div>

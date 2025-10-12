@@ -9,6 +9,7 @@ import FloatingFilter from "@/components/FloatingFilter";
 import { keyToPublicUrl } from "@/lib/gcs";
 import Link from "next/link";
 import { REGIONS, PREFECTURES, PREF_TO_REGION } from "@/lib/regions";
+import Portal from "@/components/Portal";
 
 type Item = {
   id: string;
@@ -23,6 +24,7 @@ type Item = {
   photoRef: string | null;       // Google Place Photo の photo_reference
   imageKey?: string | null;      // GCS のオブジェクトキー（例: images/<hash>/w800.webp）
   prefecture?: string | null;
+  note?: string | null;
 };
 type Filters = {
   q: string;
@@ -47,6 +49,13 @@ export default function WishlistsPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmTarget, setConfirmTarget] = useState<Item | null>(null);
+  useEffect(() => {
+    if (!confirmTarget) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [confirmTarget]);
 
   // Undo 用
   const [lastDeleted, setLastDeleted] = useState<{ placeId: string; item: Item } | null>(null);
@@ -287,9 +296,16 @@ export default function WishlistsPage() {
                 </div>
               )}
 
+              {p.note && (
+                <div className="mt-2 rounded-md border-l-4 border-amber-400 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                  <span className="mr-1">📝</span>
+                  <span className="whitespace-pre-wrap break-words">{p.note}</span>
+                </div>
+              )}
+
               <div className="mt-3 flex gap-2">
                 <button
-                  onClick={() => onDelete(p.placeId)}
+                  onClick={() => setConfirmTarget(p)}
                   disabled={deletingId === p.placeId}
                   className="rounded-lg border px-3 py-1 text-sm hover:bg-gray-50 disabled:opacity-50"
                 >
@@ -313,7 +329,7 @@ export default function WishlistsPage() {
         </ul>
       )}
 
-      {lastDeleted && (
+      {/* {lastDeleted && (
         <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-xl border bg-white px-4 py-2 shadow">
           <div className="flex items-center gap-3">
             <span className="text-sm">削除しました: {lastDeleted.item.name}</span>
@@ -358,8 +374,48 @@ export default function WishlistsPage() {
             </button>
           </div>
         </div>
+      )} */}
+      {confirmTarget && (
+        <Portal>
+          <div role="dialog" aria-modal="true"
+              className="fixed left-0 right-0 
+                          top-[env(safe-area-inset-top)] 
+                          bottom-[env(safe-area-inset-bottom)]
+                          z-[100]">
+            {/* backdrop */}
+            <div className="absolute inset-0 bg-black/40"
+                onClick={() => setConfirmTarget(null)} />
+
+            {/* dialog */}
+            <div className="absolute inset-x-0 top-1/2 mx-auto w-[92%] max-w-md 
+                            -translate-y-1/2 rounded-2xl bg-white p-5 shadow-xl">
+              <h3 className="text-base font-semibold">本当に削除しますか？</h3>
+              <p className="mt-2 text-sm text-gray-600">
+                「{confirmTarget.name}」をウィッシュリストから削除します。
+              </p>
+              <div className="mt-4 flex justify-end gap-2">
+                <button className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50"
+                        onClick={() => setConfirmTarget(null)}>
+                  キャンセル
+                </button>
+                <button
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50"
+                  onClick={async () => {
+                    await onDelete(confirmTarget.placeId);
+                    setConfirmTarget(null);
+                  }}
+                  disabled={deletingId === confirmTarget.placeId}
+                >
+                  {deletingId === confirmTarget.placeId ? "削除中…" : "削除する"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Portal>
       )}
-      
+
+
     </div>
+    
   );
 }

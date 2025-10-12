@@ -12,6 +12,13 @@ const nextConfig: NextConfig = {
       "picsum.photos",
     ],
   },
+  remotePatterns: [
+    {
+      protocol: "https",
+      hostname: "maps.googleapis.com",
+      pathname: "/maps/api/place/**", // PhotoService.GetPhoto のパス
+    },
+  ],
 
   // Webpack（本番ビルド）用：トップレベル
   serverExternalPackages: externals,

@@ -18,6 +18,7 @@ export type FoundPlace = {
   /** Google Places から拾えた写真URL（なければ null） */
   imageSrcUrl?: string | null;
   prefecture: string | null;
+  photoRef: string | null;
 };
 
 type Props = {
@@ -119,9 +120,10 @@ export default function PlacesSearch({
 
           const lat = place.geometry?.location?.lat() ?? null;
           const lng = place.geometry?.location?.lng() ?? null;
+          const firstPhoto = place.photos?.[0] ?? null;
           const photoUrl =
-            place.photos?.[0]?.getUrl({ maxWidth: 1200, maxHeight: 1200 }) ??
-            null;
+            firstPhoto?.getUrl({ maxWidth: 1200, maxHeight: 1200 }) ?? null;
+          const photoRef = firstPhoto ? (firstPhoto as any).photo_reference ?? null : null;
           console.log("photo url", photoUrl);
 
           // 都道府県の抽出
@@ -152,6 +154,7 @@ export default function PlacesSearch({
             userRatingsTotal: (place as any).user_ratings_total ?? null,
             types: (place.types as string[]) ?? null,
             imageSrcUrl: photoUrl,
+            photoRef,
             prefecture,
           };
           console.log("[extracted prefecture]:", prefecture);

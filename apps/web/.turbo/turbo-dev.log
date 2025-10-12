@@ -9,19 +9,6 @@
    - Environments: .env.local, .env
 
  [32m[1m✓[22m[39m Starting...
- [32m[1m✓[22m[39m Compiled middleware in 158ms
- [32m[1m✓[22m[39m Ready in 1068ms
- [37m[1m○[22m[39m Compiling /wishlists ...
- [32m[1m✓[22m[39m Compiled /wishlists in 2.3s
-[page] render
- GET /wishlists [32m200[39m in 2518ms
- POST /wishlists [32m200[39m in 146ms
- [32m[1m✓[22m[39m Compiled /favicon.ico in 409ms
- GET /favicon.ico?favicon.0b3bf435.ico [32m200[39m in 568ms
- GET /api/wishlists [32m200[39m in 2064ms
- [32m[1m✓[22m[39m Compiled /wishlists/new in 236ms
- GET /wishlists/new [32m200[39m in 264ms
- POST /api/wishlists [33m409[39m in 1496ms
- [32m[1m✓[22m[39m Compiled /sign-in/[[...sign-in]] in 267ms
- GET /sign-in?redirect_url=http%3A%2F%2F192.168.3.120%3A3000%2Fwishlists [32m200[39m in 670ms
+ [32m[1m✓[22m[39m Compiled middleware in 147ms
+ [32m[1m✓[22m[39m Ready in 1013ms
 [?25h
