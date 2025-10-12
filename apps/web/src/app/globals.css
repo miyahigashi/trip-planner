@@ -25,18 +25,29 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Clerk のポータルルート自体はクリックを受けない */
+
+/* === ① 自前のポータル（透過の受け皿） === */
+:where(body) > :where(.app-overlay-root) {
+  /* ← これが “抜けていた” ベース指定 */
+  pointer-events: none !important;   /* 背景のクリックを奪わない */
+  position: fixed;
+  inset: 0;
+  z-index: 70;                        /* 必要に応じて 72/80 などへ */
+}
+/* 子のうち、実際に操作させたい要素だけ有効化 */
+:where(body) > :where(.app-overlay-root) > .overlay-interactive {
+  pointer-events: auto !important;
+}
+
+/* === ② Clerk のポータル === */
 :where(body) > :where(#clerk-components) {
-  pointer-events: none !important;
+  pointer-events: none !important;    /* 受け皿は透過 */
 }
-
-/* 中に本物のモーダルが入るときは、その要素側で pointer-events が付くので操作できます */
 :where(#clerk-components) * {
-  pointer-events: auto;
+  pointer-events: auto;               /* 中の本物は操作可 */
 }
 
-/* 念のため、全画面・最大 z-index の匿名 DIV がいたら無効化（Clerk の一部環境で出る） */
+/* === ③ Next/Clerk のデバッグ巨大オーバーレイ対策（ある場合のみ） === */
 :where(body) > div[style*="position: fixed"][style*="inset: 0"][style*="z-index: 2147483647"] {
   pointer-events: none !important;
-  /* 背景を暗くする用途ではないので視覚はそのまま */
 }

@@ -75,7 +75,7 @@ export default function FloatingFilter(props: Props) {
 
       {/* モーダル */}
       {props.isOpen && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-[70]"
+        <div role="dialog" aria-modal="true" className="overlay-interactive fixed inset-0 z-[72]"
              onKeyDown={(e) => e.key === "Escape" && props.setOpen(false)}>
           <div className="absolute inset-0 bg-black/40" onClick={() => props.setOpen(false)} />
           <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-lg rounded-t-2xl bg-white shadow-xl sm:inset-0 sm:m-auto sm:h-auto sm:max-w-md sm:rounded-2xl">
