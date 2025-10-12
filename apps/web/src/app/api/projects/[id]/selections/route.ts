@@ -1,39 +1,66 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db/client";
 import { projectSelections } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
+import { z } from "zod";
 
-// POST { ops: [{ placeId, dayIndex, orderInDay }, ...] }
-export async function POST(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+/** POST /api/projects/:id/selections  Body: { placeId: string, dayIndex?: number|null, orderInDay?: number|null, note?: string|null } */
+export async function POST(req: Request, ctx: any) {
+  const { id } = (ctx as { params: { id: string } }).params;
+
   try {
-    const { id } = params;
     const body = await req.json().catch(() => ({}));
-    const ops: { placeId: string; dayIndex: number; orderInDay: number }[] =
-      Array.isArray(body?.ops) ? body.ops : [];
-
-    if (!ops.length) return NextResponse.json({ ok: true });
-
-    // トランザクションでまとめて更新
-    await db.transaction(async (tx) => {
-      for (const op of ops) {
-        await tx
-          .update(projectSelections)
-          .set({
-            dayIndex: op.dayIndex,
-            orderInDay: op.orderInDay,
-          })
-          .where(
-            sql`${projectSelections.projectId} = ${id}::uuid AND ${projectSelections.placeId} = ${op.placeId}`
-          );
-      }
+    const schema = z.object({
+      placeId: z.string().min(1),
+      dayIndex: z.number().int().nullable().optional(),
+      orderInDay: z.number().int().nullable().optional(),
+      note: z.string().nullable().optional(),
     });
+    const { placeId, dayIndex = null, orderInDay = null, note = null } =
+      schema.parse(body);
+
+    await db
+      .insert(projectSelections)
+      .values({
+        projectId: sql`${id}::uuid`,
+        placeId,
+        dayIndex,
+        orderInDay,
+        note,
+      })
+      .onConflictDoNothing();
 
     return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error(e);
-    return NextResponse.json({ error: "failed" }, { status: 500 });
+  } catch (err: any) {
+    const msg =
+      err?.issues?.[0]?.message ?? err?.message ?? "Internal Server Error";
+    return NextResponse.json({ error: msg }, { status: 400 });
+  }
+}
+
+/** DELETE /api/projects/:id/selections?placeId=XXXX */
+export async function DELETE(req: Request, ctx: any) {
+  const { id } = (ctx as { params: { id: string } }).params;
+
+  try {
+    const { searchParams } = new URL(req.url);
+    const placeId = searchParams.get("placeId");
+    if (!placeId) {
+      return NextResponse.json({ error: "placeId required" }, { status: 400 });
+    }
+
+    await db
+      .delete(projectSelections)
+      .where(
+        and(
+          eq(projectSelections.projectId, sql`${id}::uuid`),
+          eq(projectSelections.placeId, placeId)
+        )
+      );
+
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    const msg = err?.message ?? "Internal Server Error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
