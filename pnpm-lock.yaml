@@ -26,6 +26,9 @@ importers:
       '@googlemaps/markerclusterer':
         specifier: ^2.6.2
         version: 2.6.2
+      '@img/sharp-libvips-linux-x64':
+        specifier: ^1.2.3
+        version: 1.2.3
       '@upstash/redis':
         specifier: ^1.35.5
         version: 1.35.5
@@ -50,6 +53,13 @@ importers:
       zod:
         specifier: ^4.1.11
         version: 4.1.12
+    optionalDependencies:
+      '@img/sharp-darwin-arm64':
+        specifier: ^0.33.5
+        version: 0.33.5
+      '@img/sharp-linux-x64':
+        specifier: ^0.33.5
+        version: 0.33.5
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3
@@ -3195,8 +3205,7 @@ snapshots:
   '@img/sharp-libvips-linux-x64@1.0.4':
     optional: true
 
-  '@img/sharp-libvips-linux-x64@1.2.3':
-    optional: true
+  '@img/sharp-libvips-linux-x64@1.2.3': {}
 
   '@img/sharp-libvips-linuxmusl-arm64@1.0.4':
     optional: true
