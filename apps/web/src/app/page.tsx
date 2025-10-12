@@ -10,19 +10,11 @@ import Image from "next/image";
 import SignedImage from "@/components/SignedImage";
 
 export default async function HomePage() {
-  console.log("[HomePage] render start"); 
+  const fmt = (s?: string | null) => (s ?? "未定");
   noStore();
   const session = await auth();
   const userId = session?.userId ?? null;
-  console.time("[HomePage] fetchHomeData");
   const data = await fetchHomeData(userId ?? null);
-  console.log("[HomePage] userId =", userId);
-  console.timeEnd("[HomePage] fetchHomeData");
-  console.log("[HomePage] counts", {
-    trips: data.trips?.length ?? -1,
-    wishes: data.wishes?.length ?? -1,
-    firstWish: data.wishes?.[0] ?? null,
-  });
 
 const photoUrl = (ref?: string | null) =>
   ref
@@ -46,7 +38,7 @@ const photoUrl = (ref?: string | null) =>
 
           <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
-              href={userId ? "/wishlists" : "/sign-in"}
+              href={userId ? "/projects/new" : "/sign-in"}   // ← ここを変更
               className="rounded-xl bg-sky-600 text-white px-5 py-3 shadow-lg hover:bg-sky-700"
             >
               ✨ {userId ? "旅を計画する" : "サインインしてはじめる"}
@@ -69,42 +61,71 @@ const photoUrl = (ref?: string | null) =>
 
       <section className="mx-auto max-w-6xl px-4 pb-16 grid gap-10">
         {/* 続きから */}
-        <Section title="🧳 続きから" moreHref="/wishlists">
-          {data.trips.length ? (
-            <Cards cols="4">
-              {data.trips.map((t) => (
-                <Link
-                  key={t.id}
-                  href={`/trips/${t.id}`}
-                  className="group overflow-hidden rounded-2xl border bg-white shadow-sm hover:shadow-md transition"
-                >
-                  <div className="aspect-[4/3] bg-slate-100 overflow-hidden">
-                    {t.coverPhotoUrl ? (
-                      <img
-                        src={t.coverPhotoUrl}
-                        alt=""
-                        className="h-full w-full object-cover group-hover:scale-[1.02] transition"
-                      />
-                    ) : (
-                      <div className="grid h-full w-full place-items-center text-slate-400">
-                        No Image
+        <Section title="🗓️ これからの旅" moreHref="/projects">
+          {data.upcomingProjects.length ? (
+            <Cards cols="3">
+              {data.upcomingProjects.map((p) => {
+                const isSoon = !!p.startDate; // 必要なら近日バッジなど
+                return (
+                  <div key={p.id} className="rounded-2xl border bg-white shadow-sm overflow-hidden">
+                    <Link href={`/projects/${p.id}`} className="block p-4 hover:bg-gray-50/60">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="font-semibold line-clamp-2">{p.title}</div>
+                        {isSoon && (
+                          <span className="shrink-0 rounded-full border bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
+                            予定
+                          </span>
+                        )}
                       </div>
-                    )}
+                      <div className="mt-1 text-xs text-slate-500">
+                        {fmt(p.startDate)} ~ {fmt(p.endDate)}
+                      </div>
+                      {p.description && (
+                        <p className="mt-2 line-clamp-2 text-sm text-slate-600">{p.description}</p>
+                      )}
+                    </Link>
+                    <div className="px-4 pb-4">
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        {/* 候補プール（情報収集＝Sky） */}
+                        <Link
+                          href={`/projects/${p.id}/candidates`}
+                          className="
+                            inline-flex h-10 w-full items-center justify-center
+                            rounded-xl bg-sky-600 text-white text-sm font-semibold
+                            shadow-sm transition
+                            hover:bg-sky-700
+                            focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2
+                          "
+                        >
+                          候補プール
+                        </Link>
+
+                        {/* 確定一覧（決定＝Indigo） */}
+                        <Link
+                          href={`/projects/${p.id}/selections`}
+                          className="
+                            inline-flex h-10 w-full items-center justify-center
+                            rounded-xl bg-indigo-600 text-white text-sm font-semibold
+                            shadow-sm transition
+                            hover:bg-indigo-700
+                            focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-600 focus-visible:ring-offset-2
+                          "
+                        >
+                          確定一覧
+                        </Link>
+                      </div>
+                    </div>
                   </div>
-                  <div className="p-3">
-                    <div className="font-semibold line-clamp-1">{t.title}</div>
-                    <div className="mt-1 text-xs text-sky-700/80">{t.status}</div>
-                  </div>
-                </Link>
-              ))}
+                );
+              })}
             </Cards>
           ) : (
             <Empty
-              title={userId ? "まだ旅程がありません" : "サインインして旅をつくろう"}
-              hint={userId ? "ウィッシュリストから作成もおすすめ。" : undefined}
+              title={userId ? "これからの旅はまだありません" : "サインインして旅をつくろう"}
+              hint={userId ? "まずはプロジェクトを作成しましょう。" : undefined}
               action={{
-                href: userId ? "/wishlists" : "/sign-in",
-                label: userId ? "最初の旅を作る ✨" : "サインイン",
+                href: userId ? "/projects/new" : "/sign-in",
+                label: userId ? "新しい旅を作成 ✨" : "サインイン",
               }}
             />
           )}

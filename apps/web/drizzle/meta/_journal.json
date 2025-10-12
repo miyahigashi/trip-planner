@@ -43,6 +43,13 @@
       "when": 1760015273161,
       "tag": "0005_easy_venom",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1760278571753,
+      "tag": "0006_colorful_daredevil",
+      "breakpoints": true
     }
   ]
 }
