@@ -65,6 +65,7 @@ export async function GET(req: Request) {
 
 // 追加（place upsert + wishlist upsert）
 export async function POST(req: Request) {
+  
   try {
     const user = await ensureDbUser();
 
@@ -87,7 +88,7 @@ export async function POST(req: Request) {
       };
       imageSrcUrl?: string | null;     // ★ 元画像URL（Placesの写真URLなど）
     };
-
+    
     const p = body.place;
     if (!p?.placeId || !p?.name) {
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
@@ -126,7 +127,7 @@ export async function POST(req: Request) {
     //    - 優先: place.imageKey（クライアントで既に fetch-and-save 済み）
     //    - 次点: imageSrcUrl があればサーバーで保存して key を生成
     let finalKey: string | null = p.imageKey ?? null;
-
+    console.log("[wishlists:POST] imageSrcUrl =", body.imageSrcUrl);
     if (!finalKey && body.imageSrcUrl) {
       console.log("[wishlists:POST] saveImageFromUrl src =", body.imageSrcUrl);
       // 既存に key が未設定のときだけ保存してセット
@@ -140,6 +141,7 @@ export async function POST(req: Request) {
         try {
           const saved = await saveImageFromUrl(body.imageSrcUrl);
           finalKey = saved.w800Key; // 一覧表示用には w800 を採用
+          console.log("[wishlists:POST] saved key =", saved.w800Key);
           console.log("[wishlists:POST] saved image key =", finalKey);
         } catch (e) {
           console.warn("[POST /api/wishlists] saveImageFromUrl failed:", e);
@@ -153,7 +155,7 @@ export async function POST(req: Request) {
         .set({ imageUrl: finalKey })
         .where(eq(places.placeId, p.placeId));
     }
-
+    
     return NextResponse.json({ ok: true });
   } catch (e) {
     const msg = String(e ?? "");
