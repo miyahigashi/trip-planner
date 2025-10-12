@@ -1,6 +1,8 @@
 // apps/web/next.config.ts
 import type { NextConfig } from "next";
 
+const externals = ["sharp", "@img/sharp-linux-x64", "@img/sharp-libvips-linux-x64"];
+
 const nextConfig: NextConfig = {
   images: {
     domains: [
@@ -10,15 +12,14 @@ const nextConfig: NextConfig = {
       "picsum.photos",
     ],
   },
+
+  // Webpack（本番ビルド）用：トップレベル
+  serverExternalPackages: externals,
+
   experimental: {
-    // ← これを追加
-    serverComponentsExternalPackages: [
-      "sharp",
-      "@img/sharp-linux-x64",
-      "@img/sharp-libvips-linux-x64",
-    ],
+    // Turbopack（dev / RSC）用：experimental 配下
+    serverComponentsExternalPackages: externals,
   },
 };
 
-// console.log は無くても OK（ビルドログに出るだけ）
 export default nextConfig;

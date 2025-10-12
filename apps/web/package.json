@@ -6,7 +6,7 @@
     "dev": "next dev --turbopack",
     "dev:https": "vercel dev --secure --port 3000",
     "preview": "vercel dev --port 3000",
-    "build": "next build --turbopack",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit",
