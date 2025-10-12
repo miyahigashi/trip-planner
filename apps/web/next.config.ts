@@ -5,26 +5,24 @@ const externals = ["sharp", "@img/sharp-linux-x64", "@img/sharp-libvips-linux-x6
 
 const nextConfig: NextConfig = {
   images: {
+    // 旧 domains は残してもOK（remotePatterns が優先的に使われます）
     domains: [
       "storage.googleapis.com",
-      "maps.googleapis.com",
       "images.unsplash.com",
       "picsum.photos",
     ],
+    // ← ここに入れる
+    remotePatterns: [
+      { protocol: "https", hostname: "maps.googleapis.com", pathname: "/**" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com", pathname: "/**" },
+    ],
   },
-  remotePatterns: [
-    {
-      protocol: "https",
-      hostname: "maps.googleapis.com",
-      pathname: "/maps/api/place/**", // PhotoService.GetPhoto のパス
-    },
-  ],
 
-  // Webpack（本番ビルド）用：トップレベル
+  // 本番ビルド（webpack）側
   serverExternalPackages: externals,
 
   experimental: {
-    // Turbopack（dev / RSC）用：experimental 配下
+    // 開発/Turbopack(RSC)側
     serverComponentsExternalPackages: externals,
   },
 };

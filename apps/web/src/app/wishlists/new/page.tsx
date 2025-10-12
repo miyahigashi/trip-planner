@@ -3,36 +3,72 @@
 
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
-import PlacesSearch, { FoundPlace } from "@/components/PlacesSearch";
 import Image from "next/image";
+import PlacesSearch, { FoundPlace } from "@/components/PlacesSearch";
 
-const photoUrl = (ref?: string | null) =>
-  ref
-    ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${ref}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
-    : "/placeholder.jpg";
+/* ========= helpers ========= */
 
-// ★ビジュアル用の星コンポーネント（簡易）
-function Stars({ value = 0 }: { value?: number | null }) {
+const photoUrl = (src?: string | null) =>
+  src ?? "/placeholder.jpg";
+
+// 簡易の星表示
+function Stars({
+  value = 0,
+  count,
+}: {
+  value?: number | null;
+  count?: number | null;
+}) {
   const v = Math.max(0, Math.min(5, value ?? 0));
   return (
-    <div className="inline-flex items-center gap-1 align-middle">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <svg
-          key={i}
-          viewBox="0 0 24 24"
-          className={`h-4 w-4 ${i < Math.floor(v) ? "text-amber-500" : "text-gray-300"}`}
-          aria-hidden
-        >
-          <path
-            fill="currentColor"
-            d="m12 17.27 6.18 3.73-1.64-7.03L21.5 9.24l-7.19-.61L12 2 9.69 8.63 2.5 9.24l4.96 4.73L5.82 21z"
-          />
-        </svg>
-      ))}
+    <div className="flex items-center gap-3">
+      <div className="inline-flex items-center gap-1">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <svg
+            key={i}
+            viewBox="0 0 24 24"
+            className={`h-4 w-4 ${
+              i < Math.floor(v) ? "text-amber-500" : "text-gray-300"
+            }`}
+            aria-hidden
+          >
+            <path
+              fill="currentColor"
+              d="m12 17.27 6.18 3.73-1.64-7.03L21.5 9.24l-7.19-.61L12 2 9.69 8.63 2.5 9.24l4.96 4.73L5.82 21z"
+            />
+          </svg>
+        ))}
+      </div>
       <span className="text-sm text-gray-700">{v.toFixed(1)}</span>
+      {count != null && (
+        <span className="text-sm text-gray-500">（{count.toLocaleString()}件）</span>
+      )}
     </div>
   );
 }
+
+/** iOS Safari 含めて背景を完全固定 */
+function lockBodyScroll() {
+  const y = window.scrollY;
+  document.body.dataset.scrollY = String(y);
+  document.body.style.position = "fixed";
+  document.body.style.top = `-${y}px`;
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  document.body.style.width = "100%";
+}
+function unlockBodyScroll() {
+  const y = Number(document.body.dataset.scrollY || 0);
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.width = "";
+  window.scrollTo(0, y);
+  delete document.body.dataset.scrollY;
+}
+
+/* ========= page ========= */
 
 export default function NewWishlistPage() {
   const router = useRouter();
@@ -44,12 +80,20 @@ export default function NewWishlistPage() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  // 候補を選択 → モーダルを開く
+  // 候補選択 → モーダルを開く
   const handleSelect = useCallback((p: FoundPlace) => {
     setMessage(null);
     setPending(p);
     setNote("");
     setOpen(true);
+    lockBodyScroll();
+  }, []);
+
+  const closeModal = useCallback(() => {
+    setOpen(false);
+    setPending(null);
+    setSubmitting(false);
+    unlockBodyScroll();
   }, []);
 
   // 追加確定 → POST
@@ -75,7 +119,8 @@ export default function NewWishlistPage() {
             prefecture: pending.prefecture,
             note, // ★ メモ送信
           },
-          imageSrcUrl: pending.imageSrcUrl ?? null, // ★ 画像はサーバで保存
+          // 画像はサーバ側で保存（PlacesSearch が渡してくれる imageSrcUrl を使う）
+          imageSrcUrl: pending.imageSrcUrl ?? null,
         }),
       });
 
@@ -84,16 +129,14 @@ export default function NewWishlistPage() {
         throw new Error(err?.error ?? `Failed: ${resp.status}`);
       }
 
-      // 成功 → 閉じて一覧へ
-      setOpen(false);
-      setPending(null);
+      closeModal();
       router.push("/wishlists");
       router.refresh();
     } catch (e: any) {
       setMessage(e?.message ?? "追加に失敗しました。もう一度お試しください。");
       setSubmitting(false);
     }
-  }, [pending, note, router, submitting]);
+  }, [pending, note, router, submitting, closeModal]);
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8">
@@ -124,99 +167,98 @@ export default function NewWishlistPage() {
 
       {/* 確認 + メモ入力モーダル */}
       {isOpen && pending && (
-        // ★ 親を fixed+flex にしてここで中央寄せ
-        <div
-          role="dialog"
-          aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{
-            // ノッチ・ホームバー対策
-            paddingTop: "env(safe-area-inset-top)",
-            paddingBottom: "env(safe-area-inset-bottom)",
-            // iOS Safari のアドレスバーで高さが縮まる問題対策
-            minHeight: "100dvh",
-          }}
-        >
-          {/* 背景 */}
-          <div
-            className="absolute inset-0 bg-black/40"
-            onClick={() => !submitting && setOpen(false)}
-          />
+        <div className="fixed inset-0 z-[70]" style={{ height: "100dvh" }}>
+  {/* 背面 */}
+  <div
+    className="absolute inset-0 bg-black/40"
+    onClick={() => !submitting && closeModal()}
+  />
 
-          {/* 本体。relative にして上の absolute 背景と重ならないようにする */}
-          <div className="relative w-full max-w-md rounded-2xl bg-white shadow-xl max-h-[85dvh] overflow-y-auto">
-            <div className="p-5">
-              {/* 画像（任意） */}
-              {(pending.imageSrcUrl || pending.photoRef) && (
-                <img
-                  src={pending.imageSrcUrl ?? photoUrl(pending.photoRef)}
-                  alt={pending.name}
-                  className="mb-3 h-40 w-full rounded-lg object-cover"
-                />
-              )}
+  {/* 本体：位置は top-[X dvh] で調整 */}
+  <div
+    className="
+      fixed inset-x-0 top-[8dvh] mx-auto w-[92%] max-w-md
+      rounded-2xl bg-white shadow-xl
+      flex max-h-[82dvh] flex-col overflow-hidden
+    "
+    style={{ top: "3dvh" }}
+  >
+    {/* スクロール領域（min-h-0 が超重要） */}
+    <div className="min-h-0 overflow-y-auto overscroll-contain p-5 pb-4">
+      {/* ここにプレビュー画像・評価・テキストなど既存の内容 */}
+      {/* 例： */}
+      {pending?.imageSrcUrl && (
+        // <img> or <Image unoptimized> どちらでもOK
+        <img
+          src={pending.imageSrcUrl}
+          alt={pending.name}
+          className="mb-3 h-40 w-full rounded-lg object-cover"
+        />
+      )}
 
-              {/* レーティング（任意） */}
-              {(pending.rating != null || pending.userRatingsTotal != null) && (
-                <div className="mb-2 flex items-center gap-2 text-[15px]">
-                  <span>⭐</span>
-                  {pending.rating != null && <span>{pending.rating}</span>}
-                  {pending.userRatingsTotal != null && (
-                    <span className="text-gray-600">
-                      （{pending.userRatingsTotal.toLocaleString()}件）
-                    </span>
-                  )}
-                </div>
-              )}
-
-              <h3 className="text-base font-semibold">
-                この場所をWishlistsに追加しますか？
-              </h3>
-              <div className="mt-2 text-sm text-gray-700">
-                <div className="font-medium">{pending.name}</div>
-                {pending.address && <div className="text-gray-600">{pending.address}</div>}
-              </div>
-
-              <label className="mt-4 block space-y-1">
-                <span className="text-sm text-gray-600">メモ（任意）</span>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  rows={3}
-                  className="w-full rounded-lg border px-3 py-2"
-                  placeholder="例）この季節に行きたい / 予約が必要 など"
-                />
-              </label>
-
-              <div
-                className="sticky bottom-0 -m-5 mt-4 border-t bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/70"
-              >
-                <div
-                  className="flex justify-end gap-2 p-4"
-                  // iPhone のホームバーぶんの余白を必ず確保
-                  style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 8px)" }}
-                >
-                  <button
-                    className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
-                    onClick={() => setOpen(false)}
-                    disabled={submitting}
-                  >
-                    キャンセル
-                  </button>
-                  <button
-                    className="rounded-lg bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-700 disabled:opacity-50"
-                    onClick={handleConfirmAdd}
-                    disabled={submitting}
-                  >
-                    {submitting ? "追加中…" : "この内容で追加"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* 評価 */}
+      {(pending.rating != null || pending.userRatingsTotal != null) && (
+        <div className="flex items-center gap-2 text-gray-700">
+          <Stars value={pending.rating} />
+          {pending.userRatingsTotal != null && (
+            <span className="text-sm text-gray-500">
+              （{pending.userRatingsTotal.toLocaleString()}件）
+            </span>
+          )}
         </div>
       )}
 
+      {/* 名称 */}
+      <h2 className="text-lg font-semibold leading-snug">
+        {pending.name}
+      </h2>
 
+      {/* 住所 */}
+      {pending.address && (
+        <p className="text-sm text-gray-600">
+          {pending.address}
+        </p>
+      )}
+
+      {/* メモ */}
+      <label className="mt-4 block space-y-1">
+        <span className="text-sm text-gray-600">メモ（任意）</span>
+        <textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          rows={3}
+          className="w-full rounded-lg border px-3 py-2"
+          placeholder="例）この季節に行きたい / 予約が必要 など"
+        />
+      </label>
+    </div>
+
+    {/* フッター（固定。flex 末尾なので sticky 不要） */}
+    <div
+      className="border-t bg-white px-5 pt-3"
+      // Safari の下タブに押されないようセーフエリア確保
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom), 16px)" }}
+    >
+      <div className="flex justify-end gap-2">
+        <button
+          className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
+          onClick={closeModal}
+          disabled={submitting}
+        >
+          キャンセル
+        </button>
+        <button
+          className="rounded-lg bg-sky-600 px-4 py-2 text-sm text-white hover:bg-sky-700 disabled:opacity-50"
+          onClick={handleConfirmAdd}
+          disabled={submitting}
+        >
+          {submitting ? "追加中…" : "この内容で追加"}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+      )}
     </div>
   );
 }
