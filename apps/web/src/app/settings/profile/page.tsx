@@ -40,10 +40,20 @@ export default async function ProfileSettingsPage() {
             アカウントID（ハンドル）
           </label>
           <input
+            type="text"
             name="handle"
             defaultValue={me?.handle ?? ""}
             placeholder="例) neko_taro"
             className="mt-1 w-full rounded-xl border px-3 py-2"
+            required
+            minLength={3}
+            maxLength={20}
+            pattern="^[A-Za-z0-9_]{3,20}$"
+            title="英数字・アンダースコアのみ、3〜20文字"
+            inputMode="text"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
           />
           <p className="mt-1 text-xs text-slate-500">
             英数字・アンダースコアのみ、3〜20文字。重複不可（大文字小文字は区別しません）
