@@ -5,6 +5,28 @@
     "build": { "dependsOn": ["^build"], "outputs": [".next/**", "dist/**"] },
     "start": { "cache": false },
     "lint": { "outputs": [] }
+  },
+  "globalEnv": [
+    "DATABASE_URL",
+    "UPSTASH_REDIS_REST_URL",
+    "UPSTASH_REDIS_REST_TOKEN",
+    "GOOGLE_MAPS_API_KEY",
+    "NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
+    "CLERK_SECRET_KEY",
+    "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+    "NEXT_PUBLIC_CLERK_SIGN_IN_URL",
+    "NEXT_PUBLIC_CLERK_SIGN_UP_URL",
+    "NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL",
+    "NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL",
+    "NEXT_PUBLIC_GCS_BUCKET",
+    "GCS_BUCKET",
+    "GCP_SERVICE_ACCOUNT"
+  ],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["apps/**/.next/**", "packages/**/dist/**"]
+    }
   }
 }
 
