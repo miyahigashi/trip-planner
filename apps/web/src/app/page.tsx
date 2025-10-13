@@ -50,7 +50,7 @@ const photoUrl = (ref?: string | null) =>
               📍 ウィッシュリストを見る
             </Link>
             <Link
-              href="/dashboard"
+              href="/wishlists/map"
               className="rounded-xl border bg-white px-5 py-3 shadow-sm hover:bg-slate-50"
             >
               🗺️ ダッシュボード（地図）
