@@ -39,18 +39,26 @@ export default function NewProjectPage() {
             .filter(Boolean),
         }),
       });
+
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err?.error ?? "作成に失敗しました");
       }
-      const { projectId } = await res.json();
-      router.push(`/projects/${projectId}/candidates`);
+
+      // ▼ ここから追加（サマリを使った確認）
+      const data = await res.json();
+      const projectId = data.projectId as string;
+      const membersAdded = Number(data.membersAdded ?? 0);
+      const invitesCreated = Number(data.invitesCreated ?? 0);
+
+      router.push(`/projects/${projectId}/members`);
+      // ▲ ここまで
     } catch (err: any) {
       alert(err.message);
     } finally {
       setSubmitting(false);
-    }
-  };
+  }
+};
 
   return (
     <main className="mx-auto max-w-3xl p-6">
@@ -126,17 +134,6 @@ export default function NewProjectPage() {
             ※ 1つ以上選ぶと、メンバーのウィッシュリストから該当都道府県だけが候補になります
           </div>
         </div>
-
-        {/* 招待（任意） */}
-        <label className="block space-y-1">
-          <span className="text-sm text-gray-600">招待メール（任意・カンマ/空白区切り）</span>
-          <input
-            className="w-full rounded-lg border px-3 py-2"
-            value={invitees}
-            onChange={(e) => setInvitees(e.target.value)}
-            placeholder="friend1@example.com friend2@example.com"
-          />
-        </label>
 
         <div className="flex justify-end gap-3">
             {/* キャンセル（赤・アウトライン） */}

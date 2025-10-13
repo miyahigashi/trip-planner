@@ -1,3 +1,4 @@
+// apps/web/src/app/api/friends/accept/route.ts
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db/client";
