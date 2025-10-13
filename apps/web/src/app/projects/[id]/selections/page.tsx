@@ -3,9 +3,10 @@ export const dynamic = "force-dynamic";
 
 import Image from "next/image";
 import SignedImage from "@/components/SignedImage";
-import { fetchSelections } from "@/lib/project-data";
+import { fetchSelections, fetchProjectMeta } from "@/lib/project-data";
 import SelectionsBoard from "./SelectionsBoard";
 import Link from "next/link";
+import EditProjectButton from "./EditProjectButton";
 
 const photoUrl = (ref?: string | null) =>
   ref
@@ -19,6 +20,7 @@ export default async function SelectionsPage({
 }) {
   const { id } = await params;
   const rows = await fetchSelections(id);
+  const meta = await fetchProjectMeta(id);
 
   // dayIndex ごとにグループ化
   const days = new Map<number, typeof rows>();
@@ -43,7 +45,13 @@ export default async function SelectionsPage({
             >
             ← 候補プールへ戻る
             </Link>
-
+            <EditProjectButton
+              projectId={id}
+              initialTitle={meta?.title ?? ""}
+              initialDescription={meta?.description ?? ""}
+              initialStartDate={meta?.startDate ?? ""}
+              initialEndDate={meta?.endDate ?? ""}
+            />
             {/* 右側に補助情報を置きたい場合（例：選択件数） */}
             {/* <span className="text-xs text-slate-500">選択件数: {selections.length}</span> */}
         </div>

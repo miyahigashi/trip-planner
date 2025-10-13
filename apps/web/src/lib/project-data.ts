@@ -1,6 +1,7 @@
 // apps/web/src/lib/project-data.ts
 import "server-only";
 import { db } from "@/db/client";
+import { projects } from "@/db/schema";
 import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import {
   wishlists,
@@ -83,4 +84,28 @@ export async function fetchSelections(projectId: string) {
     .innerJoin(places, eq(projectSelections.placeId, places.placeId))
     .where(eq(projectSelections.projectId, sql`${projectId}::uuid`)) // ★ uuidキャスト
     .orderBy(asc(projectSelections.dayIndex), asc(projectSelections.orderInDay));
+}
+
+function toYmd(v: unknown): string | "" {
+  if (!v) return "";
+  // Drizzleのdate型は DB設定により string or Date のどちらか
+  if (typeof v === "string") return v;                 // 例: "2026-04-09"
+  if (v instanceof Date) return v.toISOString().slice(0, 10);
+  return "";
+}
+
+export async function fetchProjectMeta(projectId: string) {
+  const [row] = await db
+    .select({ startDate: projects.startDate, endDate: projects.endDate, title: projects.title, description: projects.description })
+    .from(projects)
+    .where(eq(projects.id, projectId))
+    .limit(1);
+
+  if (!row) return null;
+  return {
+    startDate: toYmd(row.startDate),
+    endDate: toYmd(row.endDate),
+    title: row.title,
+    description: row.description,
+  };
 }
