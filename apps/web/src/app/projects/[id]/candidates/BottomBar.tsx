@@ -27,7 +27,7 @@ export default function BottomBar({
       style={{
         // 下ナビの高さ + 余白 + セーフエリアの上に配置
         bottom:
-          "calc(var(--bottom-nav-h, 72px) + 12px + env(safe-area-inset-bottom))",
+          "calc(var(--bottom-nav-h, 45px) + 12px + env(safe-area-inset-bottom))",
       }}
     >
       <div className="pointer-events-auto mx-auto w-full max-w-6xl px-4">

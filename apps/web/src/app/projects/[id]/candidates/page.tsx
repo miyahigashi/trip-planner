@@ -33,7 +33,7 @@ export default async function CandidatesPage({
       style={{
         // 下ナビ高さ + バー高さ(= p-3 + 内部高さ ≒ 64px 目安) + 余白 + セーフエリア
         paddingBottom:
-          "calc(var(--bottom-nav-h, 72px) + 64px + 16px + env(safe-area-inset-bottom))",
+          "calc(var(--bottom-nav-h, 72px) + 16px + env(safe-area-inset-bottom))",
       }}
     >
       <h1 className="text-2xl font-bold">候補プール</h1>
