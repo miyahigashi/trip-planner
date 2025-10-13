@@ -7,7 +7,7 @@
    - Environments: .env.local, .env
 
  [37m[1m [22m[39m Creating an optimized production build ...
- [32m[1m✓[22m[39m Compiled successfully in 1751ms
+ [32m[1m✓[22m[39m Compiled successfully in 1874ms
  [37m[1m [22m[39m Skipping linting
 [?25l [37m[1m [22m[39m Checking validity of types  [36m.[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m..[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m...[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m.[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m..[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m...[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m.[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m..[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m...[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m.[39m[2K[1G[?25h [37m[1m [22m[39m Checking validity of types     [32m[1m✓[22m[39m Checking validity of types 
 [?25l [37m[1m [22m[39m Collecting page data  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting page data  [36m..[39m[2K[1G[?25h [37m[1m [22m[39m Collecting page data     [32m[1m✓[22m[39m Collecting page data 
@@ -52,8 +52,8 @@
 ├ ƒ /projects/[id]/selections            1.75 kB         [37m[1m112 kB[22m[39m
 ├ ○ /projects/new                        2.47 kB         [37m[1m104 kB[22m[39m
 ├ ƒ /settings/profile                    1.52 kB         [37m[1m108 kB[22m[39m
-├ ƒ /sign-in/[[...sign-in]]              2.26 kB         [37m[1m137 kB[22m[39m
-├ ƒ /sign-up/[[...sign-up]]              2.26 kB         [37m[1m137 kB[22m[39m
+├ ƒ /sign-in/[[...sign-in]]              2.27 kB         [37m[1m137 kB[22m[39m
+├ ƒ /sign-up/[[...sign-up]]              2.27 kB         [37m[1m137 kB[22m[39m
 ├ ƒ /u/[handle]                            374 B         [37m[1m107 kB[22m[39m
 ├ ○ /wishlists                           6.99 kB         [37m[1m114 kB[22m[39m
 ├ ƒ /wishlists/map                       11.1 kB         [37m[1m113 kB[22m[39m
