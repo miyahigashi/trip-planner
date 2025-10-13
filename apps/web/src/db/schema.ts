@@ -21,10 +21,14 @@ export const users = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),                        // アプリ内ユーザーID(UUID)
     clerkUserId: text("clerk_user_id").notNull().unique(),              // Clerkの userId(例: "user_xxx")
     email: text("email").notNull(),
+    handle: text("handle"),                    // 例: "taro_yamada"
+    bio: text("bio"),
+    avatarKey: text("avatar_key"),             // GCS などのオブジェクトキー
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
     usersEmailIdx: uniqueIndex("uniq_users_email").on(t.email),
+    uniqHandleCi: uniqueIndex("uniq_users_handle_ci").on(sql`lower(${t.handle})`).where(sql`${t.handle} is not null`),
   })
 );
 
@@ -175,3 +179,29 @@ export const projectSelections = pgTable(
   },
   (t) => ({ pk: primaryKey({ columns: [t.projectId, t.placeId] }) }),
 );
+// --- プロフィール（users 1:1） ---
+export const userProfiles = pgTable("user_profiles", {
+  userId: uuid("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+  displayName: text("display_name"),
+  bio: text("bio"),
+  avatarKey: text("avatar_key"), // GCS: "avatars/{uuid}/w400.webp" など
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// --- フレンド（シンプル相互承認モデル） ---
+export const friendships = pgTable(
+  "friendships",
+  {
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    friendId: uuid("friend_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    status: text("status").$type<"pending" | "accepted" | "blocked">().default("pending").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    // リクエスト発行者（片側だけ pending を持つ設計）
+    requestedBy: uuid("requested_by").notNull().references(() => users.id, { onDelete: "cascade" }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.friendId] }),
+  })
+);
+

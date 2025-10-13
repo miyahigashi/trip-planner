@@ -1,4 +1,6 @@
 // apps/web/src/components/SignedImage.tsx
+"use client";
+
 import Image from "next/image";
 
 type Props = { objectKey: string; alt: string; width: number; height: number; className?: string };
@@ -16,7 +18,6 @@ export default function SignedImage({ objectKey, alt, width, height, className }
       width={width}
       height={height}
       className={className}
-      // まずは確実に表示確認したい時は true に（エラー回避）
       unoptimized
     />
   );

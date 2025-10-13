@@ -50,6 +50,20 @@
       "when": 1760278571753,
       "tag": "0006_colorful_daredevil",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1760322321348,
+      "tag": "0007_lying_rafael_vega",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1760323563853,
+      "tag": "0008_serious_may_parker",
+      "breakpoints": true
     }
   ]
 }

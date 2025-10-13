@@ -7,49 +7,61 @@
    - Environments: .env.local, .env
 
  [37m[1m [22m[39m Creating an optimized production build ...
- [32m[1m✓[22m[39m Compiled successfully in 1540ms
+ [32m[1m✓[22m[39m Compiled successfully in 2.5s
  [37m[1m [22m[39m Skipping linting
-[?25l [37m[1m [22m[39m Checking validity of types  [36m.[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m..[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m...[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m.[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m..[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m...[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m.[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m..[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m...[39m[2K[1G[?25h [37m[1m [22m[39m Checking validity of types     [32m[1m✓[22m[39m Checking validity of types 
+[?25l [37m[1m [22m[39m Checking validity of types  [36m.[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m..[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m...[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m.[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m..[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m...[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m.[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m..[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m...[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m.[39m[2K[1G [37m[1m [22m[39m Checking validity of types  [36m..[39m[2K[1G[?25h [37m[1m [22m[39m Checking validity of types     [32m[1m✓[22m[39m Checking validity of types 
 [?25l [37m[1m [22m[39m Collecting page data  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting page data  [36m..[39m[2K[1G[?25h [37m[1m [22m[39m Collecting page data     [32m[1m✓[22m[39m Collecting page data 
-[?25l [37m[1m [22m[39m Generating static pages (0/21)  [36m[    ][39m[2K[1G [37m[1m [22m[39m Generating static pages (0/21)  [36m[=   ][39m[2K[1G [37m[1m [22m[39m Generating static pages (17/21)  [36m[==  ][39m[2K[1G[?25h [32m[1m✓[22m[39m Generating static pages (21/21)
-[?25l [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[?25l [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G[?25h [37m[1m [22m[39m Collecting build traces     [32m[1m✓[22m[39m Collecting build traces 
+[?25l [37m[1m [22m[39m Generating static pages (0/28)  [36m[    ][39m[2K[1G [37m[1m [22m[39m Generating static pages (0/28)  [36m[=   ][39m[2K[1G[?25h [32m[1m✓[22m[39m Generating static pages (28/28)
+[?25l [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[?25l [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m.[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m.[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m..[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m..[39m[2K[1G [37m[1m [22m[39m Finalizing page optimization  [36m...[39m[2K[1G [37m[1m [22m[39m Collecting build traces  [36m...[39m[2K[1G[?25h [37m[1m [22m[39m Collecting build traces     [32m[1m✓[22m[39m Collecting build traces 
 [2K[1G[?25h [37m[1m [22m[39m Finalizing page optimization     [32m[1m✓[22m[39m Finalizing page optimization 
 
 [4mRoute (app)[24m                                 [4mSize[24m  [4mFirst Load JS[24m  [4m[24m  [4m[24m
-┌ ƒ /                                      178 B         [37m[1m110 kB[22m[39m
-├ ○ /_not-found                            989 B         [37m[1m103 kB[22m[39m
-├ ƒ /api/debug-auth                        161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/debug-maps                        161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/debug/wishlists                   161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/dev/create-project                161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/health                            161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/health/db                         161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/images/fetch-and-save             161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/images/sign-url                   161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/kv                                161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/places/search                     161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/projects                          161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/projects/[id]/candidates          161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/projects/[id]/selections          161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/wishlists                         161 B         [37m[1m102 kB[22m[39m
-├ ƒ /api/wishlists/[placeId]               161 B         [37m[1m102 kB[22m[39m
-├ ƒ /dashboard                             161 B         [37m[1m102 kB[22m[39m
-├ ○ /places                                290 B         [37m[1m102 kB[22m[39m
-├ ƒ /projects                              178 B         [37m[1m110 kB[22m[39m
-├ ƒ /projects/[id]                         161 B         [37m[1m102 kB[22m[39m
-├ ƒ /projects/[id]/candidates            1.71 kB         [37m[1m112 kB[22m[39m
-├ ƒ /projects/[id]/plan                    178 B         [37m[1m110 kB[22m[39m
-├ ƒ /projects/[id]/selections            2.09 kB         [37m[1m112 kB[22m[39m
-├ ○ /projects/new                        2.46 kB         [37m[1m104 kB[22m[39m
-├ ƒ /sign-in/[[...sign-in]]                390 B         [37m[1m136 kB[22m[39m
-├ ƒ /sign-up/[[...sign-up]]                390 B         [37m[1m136 kB[22m[39m
-├ ○ /wishlists                           7.34 kB         [37m[1m114 kB[22m[39m
-├ ○ /wishlists/map                       11.2 kB         [37m[1m113 kB[22m[39m
-└ ○ /wishlists/new                        4.7 kB         [37m[1m106 kB[22m[39m
+┌ ƒ /                                      400 B         [37m[1m111 kB[22m[39m
+├ ○ /_not-found                            198 B         [37m[1m102 kB[22m[39m
+├ ○ /account                             3.92 kB         [37m[1m159 kB[22m[39m
+├ ƒ /api/debug-auth                        198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/debug-maps                        198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/debug/wishlists                   198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/dev/create-project                198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/friends                           198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/friends/accept                    198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/friends/request                   198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/health                            198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/health/db                         198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/images/fetch-and-save             198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/images/sign-url                   198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/kv                                198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/me/avatar                         198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/me/profile                        198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/places/search                     198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/projects                          198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/projects/[id]/candidates          198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/projects/[id]/selections          198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/uploads/avatar                    198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/users/lookup                      198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/wishlists                         198 B         [37m[1m102 kB[22m[39m
+├ ƒ /api/wishlists/[placeId]               198 B         [37m[1m102 kB[22m[39m
+├ ƒ /dashboard                             198 B         [37m[1m102 kB[22m[39m
+├ ○ /friends                             1.53 kB         [37m[1m109 kB[22m[39m
+├ ○ /places                                294 B         [37m[1m102 kB[22m[39m
+├ ƒ /profile                               388 B         [37m[1m111 kB[22m[39m
+├ ƒ /projects                              400 B         [37m[1m111 kB[22m[39m
+├ ƒ /projects/[id]                         198 B         [37m[1m102 kB[22m[39m
+├ ƒ /projects/[id]/candidates            1.84 kB         [37m[1m112 kB[22m[39m
+├ ƒ /projects/[id]/plan                    400 B         [37m[1m111 kB[22m[39m
+├ ƒ /projects/[id]/selections            1.75 kB         [37m[1m112 kB[22m[39m
+├ ○ /projects/new                        2.47 kB         [37m[1m104 kB[22m[39m
+├ ƒ /settings/profile                    1.52 kB         [37m[1m108 kB[22m[39m
+├ ƒ /sign-in/[[...sign-in]]              2.26 kB         [37m[1m137 kB[22m[39m
+├ ƒ /sign-up/[[...sign-up]]              2.26 kB         [37m[1m137 kB[22m[39m
+├ ƒ /u/[handle]                            374 B         [37m[1m107 kB[22m[39m
+├ ○ /wishlists                           6.99 kB         [37m[1m114 kB[22m[39m
+├ ƒ /wishlists/map                       11.1 kB         [37m[1m113 kB[22m[39m
+└ ○ /wishlists/new                       4.75 kB         [37m[1m106 kB[22m[39m
 + First Load JS shared by all             [37m[1m102 kB[22m[39m
-  ├ chunks/142-f4626882ef05056e.js       45.3 kB
-  ├ chunks/9420b3d0-1814579faddf9aee.js  54.2 kB
-  └ other shared chunks (total)             2 kB
+  ├ chunks/2142-f773d768282dd464.js      45.3 kB
+  ├ chunks/9420b3d0-a688a198c1bfd619.js  54.2 kB
+  └ other shared chunks (total)          2.05 kB
 
 
 ƒ Middleware                             [37m[1m81.4 kB[22m[39m

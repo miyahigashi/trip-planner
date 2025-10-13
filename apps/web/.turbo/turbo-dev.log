@@ -9,6 +9,16 @@
    - Environments: .env.local, .env
 
  [32m[1m✓[22m[39m Starting...
- [32m[1m✓[22m[39m Compiled middleware in 144ms
- [32m[1m✓[22m[39m Ready in 1039ms
+ [32m[1m✓[22m[39m Compiled middleware in 182ms
+ [32m[1m✓[22m[39m Ready in 1009ms
+ [37m[1m○[22m[39m Compiling /profile ...
+ [32m[1m✓[22m[39m Compiled /profile in 1941ms
+ GET /profile [32m200[39m in 3055ms
+ POST /profile [32m200[39m in 176ms
+ [32m[1m✓[22m[39m Compiled /favicon.ico in 177ms
+ GET /favicon.ico?favicon.0b3bf435.ico [32m200[39m in 431ms
+ [32m[1m✓[22m[39m Compiled /settings/profile in 374ms
+ GET /settings/profile [32m200[39m in 1058ms
+ GET /profile [32m200[39m in 174ms
+ POST /profile [32m200[39m in 225ms
 [?25h

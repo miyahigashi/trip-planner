@@ -178,7 +178,7 @@ export default function NewWishlistPage() {
   
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
+    <div className="mx-auto max-w-2xl px-4 pt-2 pb-8 md:pt-4">
       <h1 className="mb-6 text-2xl font-semibold">Wishlists に追加</h1>
 
       <div className="rounded-lg border bg-white p-4">
@@ -211,7 +211,7 @@ export default function NewWishlistPage() {
           role="dialog"
           aria-modal="true"
           data-modal-root
-          className="fixed inset-0 z-[70] app-overlay-root"
+          className="fixed inset-0 z-[9999] app-overlay-root"
           style={{ height: '100dvh' }}
         >
           {/* 背景：クリックで閉じるので auto */}
@@ -224,18 +224,13 @@ export default function NewWishlistPage() {
 
           {/* 中央寄せラッパ：ここから内側は操作可 */}
           <div
-            className="
-              absolute inset-0 flex justify-center p-4
-              pt-[max(6dvh,calc(env(safe-area-inset-top)+12px))]
-              pointer-events-auto
-            "
+            className="absolute inset-0 flex items-center justify-center p-4 pointer-events-auto"
             style={{ height: '100dvh' }}
           >
             <div
-              className="
-                w-[92%] max-w-md rounded-2xl bg-white shadow-xl
-                flex max-h-[80dvh] flex-col overflow-hidden
-              "
+              className="w-[92%] max-w-md rounded-2xl bg-white shadow-xl flex flex-col overflow-hidden
+                        translate-y-[-6vh] md:translate-y-0"  // ← ここで上に 6vh 持ち上げ（モバイルだけ）
+              style={{ maxHeight: "min(90dvh, 700px)" }}
             >
               {/* スクロール領域 */}
               <div className="min-h-0 overflow-y-auto overscroll-contain p-5 pb-4">
@@ -278,7 +273,7 @@ export default function NewWishlistPage() {
               {/* フッター（iOS セーフエリア考慮） */}
               <div
                 className="border-t bg-white px-5 pt-3"
-                style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' }}
+                style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 12px)' }}
               >
                 <div className="flex justify-end gap-2">
                   <button
