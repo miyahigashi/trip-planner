@@ -1,3 +1,4 @@
+// apps/web/src/app/friends/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,7 +9,7 @@ type Row = { friendId: string; email: string; displayName?: string | null; avata
 export default function FriendsPage() {
   const [accepted, setAccepted] = useState<Row[]>([]);
   const [incoming, setIncoming] = useState<Row[]>([]);
-  const [email, setEmail] = useState("");
+  const [to, setTo] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function load() {
@@ -21,12 +22,16 @@ export default function FriendsPage() {
   useEffect(() => { load(); }, []);
 
   async function sendRequest() {
-    if (!email) return;
+    if (!to) return;
     setBusy(true);
-    const res = await fetch("/api/friends/request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }) });
+    const res = await fetch("/api/friends/request", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to }), // ← email ではなく to
+    });
     setBusy(false);
     if (!res.ok) alert("送信できませんでした");
-    else { setEmail(""); load(); }
+    else { setTo(""); load(); }
   }
 
   async function accept(friendId: string) {
@@ -44,18 +49,21 @@ export default function FriendsPage() {
       {/* 申請フォーム */}
       <section className="rounded-2xl border bg-white p-4">
         <h2 className="text-base font-semibold">友だちを追加</h2>
-        <div className="mt-3 flex gap-2">
+
+        {/* 小画面: 1列（ボタンは下） / 画面幅sm以上: 入力 + ボタン横並び */}
+        <div className="mt-3 grid gap-2 grid-cols-1 sm:grid-cols-[1fr_auto]">
           <input
-            type="email"
-            placeholder="相手のメールアドレス"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="flex-1 rounded-lg border px-3 py-2"
+            type="text"
+            placeholder="相手のメール or @ハンドル"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="rounded-lg border px-3 py-2 w-full"
+            onKeyDown={(e) => e.key === "Enter" && !busy && to && sendRequest()}
           />
           <button
             onClick={sendRequest}
-            disabled={busy || !email}
-            className="rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
+            disabled={busy || !to}
+            className="w-full sm:w-auto rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
           >
             申請する
           </button>
