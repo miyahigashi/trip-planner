@@ -78,8 +78,8 @@ export default function SettingsMenu() {
           >
             <div className="p-1">
               <MenuItem href="/projects" label="旅の計画一覧" onSelect={() => setOpen(false)} />
-              <MenuItem href="/wishlists" label="ウィッシュリスト" onSelect={() => setOpen(false)} />
-              <MenuItem href="/dashboard" label="地図ダッシュボード" onSelect={() => setOpen(false)} />
+              <MenuItem href="/wishlists" label="行きたいリスト" onSelect={() => setOpen(false)} />
+              <MenuItem href="/wishlists/map" label="マップ" onSelect={() => setOpen(false)} />
               <MenuItem href="/profile" label="プロフィール設定" onSelect={() => setOpen(false)} />
               <MenuItem href="/friends" label="フレンド" onSelect={() => setOpen(false)} />
             </div>

@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AddWishlistLink from "@/components/AddWishlistLink";
+import NavLink from "@/components/NavLink";
 
 /**
  * 画面下に常時固定されるアクションバー。
@@ -34,38 +35,40 @@ export default function FooterActions() {
           {/* モバイル: アイコンのみ・等間隔 */}
           <nav className="flex h-14 items-center justify-around md:hidden">
             {/* ホーム */}
-            <Link href="/" className={mobBtn} aria-label="ホーム">
+            <NavLink href="/" className={mobBtn} aria-label="ホーム"  activeMode="exact">
               <svg viewBox="0 0 24 24" className="size-5 text-slate-700" aria-hidden>
                 <path d="M12 3 3 10h2v8h5v-5h4v5h5v-8h2L12 3z" fill="currentColor" />
               </svg>
-            </Link>
+            </NavLink>
 
             {/* Wishlists（リスト） */}
-            <Link
+            <NavLink
               href="/wishlists"
               className={[mobBtn, onWishlists && isList ? "ring-2 ring-sky-500" : ""].join(" ")}
-              aria-label="リストで見る"
+              aria-label="行きたいリスト"
+              activeMode="exact"
             >
               {/* list icon */}
               <svg viewBox="0 0 24 24" className="size-5 text-slate-700" aria-hidden>
                 <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z" fill="currentColor" />
               </svg>
-            </Link>
+            </NavLink>
 
             {/* マップ */}
-            <Link
+            <NavLink
               href="/wishlists/map"
               className={[mobBtn, onWishlists && isMap ? "ring-2 ring-sky-500" : ""].join(" ")}
               aria-label="マップで見る"
+              activeMode="segment"
             >
               <svg viewBox="0 0 24 24" className="size-5 text-slate-700" aria-hidden>
                 <path d="M12 22s7-5.33 7-12a7 7 0 1 0-14 0c0 6.67 7 12 7 12Zm0-9a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z" fill="currentColor" />
               </svg>
-            </Link>
+            </NavLink>
 
             {/* 追加 */}
             <AddWishlistLink
-              aria-label="Wishlistsに追加"
+              aria-label="行きたいリストに追加"
               iconOnly
               className="size-10 rounded-xl text-white bg-gradient-to-r from-sky-500 to-teal-500 shadow-[0_10px_24px_-10px_rgba(14,165,233,.7)]"
             />
@@ -79,7 +82,7 @@ export default function FooterActions() {
               href="/wishlists"
               className={[pcBtn, onWishlists && isList ? "ring-2 ring-sky-500" : ""].join(" ")}
             >
-              📋 リスト
+              📋 行きたいリスト
             </Link>
 
             <Link
@@ -91,7 +94,7 @@ export default function FooterActions() {
 
             <AddWishlistLink
               className="inline-flex items-center rounded-xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-sky-500 to-teal-500 shadow-[0_10px_24px_-10px_rgba(14,165,233,.7)] hover:brightness-110"
-            label="Wishlistsに追加"/>
+            label="行きたいリストに追加"/>
           </nav>
         </div>
       </div>

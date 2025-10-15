@@ -33,7 +33,7 @@ export default function ClientHeader() {
             </span>
             <div className="leading-tight">
               <div className="text-xl font-bold tracking-tight">Trip Planner</div>
-              <div className="text-xs text-slate-600">旅の計画とウィッシュリスト</div>
+              <div className="text-xs text-slate-600">旅の計画と行きたいリスト</div>
             </div>
           </Link>
 
