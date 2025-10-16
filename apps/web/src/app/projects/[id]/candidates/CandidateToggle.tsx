@@ -1,30 +1,67 @@
-// apps/web/src/app/projects/[id]/candidates/CandidateToggle.tsx
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
 export default function CandidateToggle({
-  projectId, placeId, initial,
-}: { projectId: string; placeId: string; initial: boolean }) {
+  projectId,
+  placeId,
+  initial,           // 現在「候補か」
+  isSelected = false // 現在「確定か」（バッジ表示用に既に持っているはず）
+}: {
+  projectId: string;
+  placeId: string;
+  initial: boolean;
+  isSelected?: boolean;
+}) {
+  const router = useRouter();
   const [isOn, setOn] = useState(initial);
   const [pending, start] = useTransition();
 
-  const add = () => start(async () => {
-    setOn(true);
-    const r = await fetch(`/api/projects/${projectId}/candidates`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ placeId }),
+  const add = () =>
+    start(async () => {
+      setOn(true);
+      const r = await fetch(`/api/projects/${projectId}/candidates`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ placeId }),
+      });
+      if (!r.ok) {
+        setOn(false);
+        alert("候補に追加できませんでした");
+        return;
+      }
+      router.refresh();
     });
-    if (!r.ok) setOn(false);
-  });
 
-  const remove = () => start(async () => {
-    setOn(false);
-    const r = await fetch(`/api/projects/${projectId}/candidates?placeId=${encodeURIComponent(placeId)}`, {
-      method: "DELETE",
+  const remove = () =>
+    start(async () => {
+      // もし確定中なら、同時に確定も解除するか確認
+      let alsoUnselect = false;
+      if (isSelected) {
+        const ok = window.confirm(
+          "このスポットは現在『確定』にも入っています。\n候補を取り消すと同時に、確定からも外しますか？"
+        );
+        if (!ok) return;
+        alsoUnselect = true;
+      }
+
+      setOn(false);
+      const url = new URL(
+        `/api/projects/${projectId}/candidates`,
+        window.location.origin
+      );
+      url.searchParams.set("placeId", placeId);
+      if (alsoUnselect) url.searchParams.set("alsoUnselect", "1");
+
+      const r = await fetch(url.toString(), { method: "DELETE" });
+      if (!r.ok) {
+        setOn(true);
+        alert("候補を取り消せませんでした");
+        return;
+      }
+      router.refresh();
     });
-    if (!r.ok) setOn(true);
-  });
 
   return isOn ? (
     <button
@@ -33,7 +70,7 @@ export default function CandidateToggle({
       disabled={pending}
       aria-label="候補を取り消す"
     >
-      ✓ 候補に追加済み（取り消す）
+      {pending ? "処理中…" : "✓ 候補（取り消す）"}
     </button>
   ) : (
     <button
@@ -42,7 +79,7 @@ export default function CandidateToggle({
       disabled={pending}
       aria-label="候補に追加"
     >
-      候補に追加
+      {pending ? "追加中…" : "候補に追加"}
     </button>
   );
 }

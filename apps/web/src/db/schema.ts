@@ -232,3 +232,19 @@ export const friendships = pgTable(
     pk: primaryKey({ columns: [t.userId, t.friendId] }),
   })
 );
+
+export const projectCandidateVotes = pgTable(
+  "project_candidate_votes",
+  {
+    projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    placeId: text("place_id").notNull().references(() => places.placeId, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.projectId, t.placeId, t.userId] }),
+    byProjectPlace: index("idx_votes_project_place").on(t.projectId, t.placeId),
+    byProjectUser: index("idx_votes_project_cuser").on(t.projectId, t.userId),
+    uniq: uniqueIndex("uniq_vote_per_user").on(t.projectId, t.placeId, t.userId),
+  })
+);

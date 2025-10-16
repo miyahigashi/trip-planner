@@ -9,6 +9,8 @@ import CandidateToggle from "../candidates/CandidateToggle";
 import SelectToggle from "./SelectToggle";
 import ProjectTabs from "../_components/ProjectTabs";
 import { fetchProjectCandidates } from "@/lib/project-data";
+import CandidateVoteButton from "./CandidateVoteButton";
+
 
 const photoUrl = (ref?: string | null) =>
   ref
@@ -80,9 +82,21 @@ export default async function CandidatesPage({
 
                 {/* 候補解除 or 確定へ */}
                 <div className="mt-3 flex items-center justify-between gap-2">
-                  <CandidateToggle projectId={id} placeId={w.placeId} initial={true} />
+                  <CandidateToggle
+                    projectId={id}
+                    placeId={w.placeId}
+                    initial={true}
+                    isSelected={Boolean(w.isSelected)} // ← 重要
+                  />
                   <SelectToggle projectId={id} placeId={w.placeId} selected={Boolean(w.isSelected)} />
                 </div>
+                <CandidateVoteButton
+                  projectId={id}
+                  placeId={w.placeId}
+                  initialVoted={Boolean(w.votedByMe)}
+                  initialCount={Number(w.votes ?? 0)}
+                  className="!px-2.5 !py-1.5"
+                />
               </div>
             </li>
           ))}

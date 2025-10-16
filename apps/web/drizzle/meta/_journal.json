@@ -71,6 +71,13 @@
       "when": 1760615433606,
       "tag": "0009_silky_eternity",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1760625860222,
+      "tag": "0010_mature_living_lightning",
+      "breakpoints": true
     }
   ]
 }

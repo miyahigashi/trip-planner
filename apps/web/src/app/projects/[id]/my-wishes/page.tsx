@@ -103,12 +103,13 @@ export default async function MyWishesPage({ params }: { params: Promise<Params>
                     projectId={projectId}
                     placeId={w.placeId}
                     initial={Boolean(w.isCandidate)}
+                    isSelected={Boolean(w.isSelected)}
                   />
-                  <SelectToggle
+                  {/* <SelectToggle
                     projectId={projectId}
                     placeId={w.placeId}
                     selected={Boolean(w.isSelected)}
-                  />
+                  /> */}
                 </div>
               </div>
             </li>

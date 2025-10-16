@@ -1,48 +1,68 @@
-// apps/web/src/app/projects/[id]/candidates/SelectToggle.tsx
 "use client";
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { useOptimistic } from "react";
-import { selectPlace, unselectPlace } from "@/app/(actions)/project-actions";
+
+type Props = {
+  projectId: string;
+  placeId: string;
+  selected: boolean;              // 現在「確定」状態か
+  // 確定→取り消し時に候補からも外す確認を出す場合は true
+  confirmDemote?: boolean;
+};
 
 export default function SelectToggle({
-  projectId, placeId, selected,
-}: { projectId: string; placeId: string; selected: boolean }) {
+  projectId,
+  placeId,
+  selected,
+  confirmDemote = false,
+}: Props) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
-  // 楽観的にトグル
-  const [optimistic, setOptimistic] = useOptimistic(selected);
+  const call = (action: "select" | "unselect" | "unselect_and_uncandidate") =>
+    fetch(`/api/projects/${projectId}/selections/toggle`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      body: JSON.stringify({ placeId, action }),
+    });
 
-  async function toggle(next: boolean) {
-    setOptimistic(next);
-    try {
-      if (next) await selectPlace(projectId, placeId);
-      else await unselectPlace(projectId, placeId);
-    } finally {
-      // サーバ側で revalidatePath 済みでも、refresh を入れておくと確実
+  const onSelect = () =>
+    startTransition(async () => {
+      await call("select");
+      router.refresh(); // SSR一覧を再取得
+    });
+
+  const onUnselect = () =>
+    startTransition(async () => {
+      let action: "unselect" | "unselect_and_uncandidate" = "unselect";
+      if (confirmDemote) {
+        const ok = window.confirm(
+          "確定を取り消して候補からも外しますか？（OKで両方解除）"
+        );
+        if (!ok) return;
+        action = "unselect_and_uncandidate";
+      }
+      await call(action);
       router.refresh();
-    }
-  }
+    });
 
-  return optimistic ? (
+  return selected ? (
     <button
-      type="button"
-      onClick={() => startTransition(() => toggle(false))}
-      disabled={pending}
-      className="rounded-lg border px-3 py-1.5 text-sm bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 disabled:opacity-50"
-    >
-      ✓ 確定済み（解除）
-    </button>
-  ) : (
-    <button
-      type="button"
-      onClick={() => startTransition(() => toggle(true))}
+      onClick={onUnselect}
       disabled={pending}
       className="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
     >
-      確定に追加
+      {pending ? "取り消し中…" : "確定を取り消す"}
+    </button>
+  ) : (
+    <button
+      onClick={onSelect}
+      disabled={pending}
+      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
+    >
+      {pending ? "追加中…" : "確定にする"}
     </button>
   );
 }
