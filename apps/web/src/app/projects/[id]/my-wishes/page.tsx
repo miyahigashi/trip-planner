@@ -1,47 +1,50 @@
-// apps/web/src/app/projects/[id]/candidates/page.tsx
+// apps/web/src/app/projects/[id]/my-wishes/page.tsx
 export const revalidate = 0;
 export const dynamic = "force-dynamic";
 
-import Link from "next/link"; // ★ 追加
 import Image from "next/image";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 import SignedImage from "@/components/SignedImage";
-import CandidateToggle from "../candidates/CandidateToggle";
-import SelectToggle from "./SelectToggle";
 import ProjectTabs from "../_components/ProjectTabs";
-import { fetchProjectCandidates } from "@/lib/project-data";
+import CandidateToggle from "../candidates/CandidateToggle";
+import SelectToggle from "../candidates/SelectToggle";
+import { fetchMyWishesForProject } from "@/lib/project-data";
+import Link from "next/link";
 
 const photoUrl = (ref?: string | null) =>
   ref
     ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${ref}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
     : "/placeholder.jpg";
 
-export default async function CandidatesPage({
-  params,
-}: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const items = await fetchProjectCandidates(id);
+type Params = { id: string };
+
+export default async function MyWishesPage({ params }: { params: Promise<Params> }) {
+  const { id: projectId } = await params;
+  const { userId } = await auth();
+  if (!userId) redirect(`/sign-in?next=/projects/${projectId}/my-wishes`);
+
+  const items = await fetchMyWishesForProject(projectId, userId);
 
   return (
     <main className="mx-auto max-w-6xl p-6">
-      {/* タイトル + しおりボタン */}
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">候補</h1>
+        <h1 className="text-2xl font-bold">自分のリスト</h1>
         <Link
-          href={`/projects/${id}/selections`}
+          href={`/projects/${projectId}/selections`}
           className="inline-flex h-10 items-center rounded-xl bg-indigo-600 px-4 text-sm font-semibold text-white shadow hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
         >
           しおり
         </Link>
       </div>
-
-      <ProjectTabs projectId={id} />
+      <ProjectTabs projectId={projectId} activeKey="my" />
 
       {items.length === 0 ? (
         <div className="mt-6 rounded-2xl border bg-white/70 p-8 text-center text-slate-600">
-          候補はまだありません。
+          対象の都道府県に一致するウィッシュはありません。
           <div className="mt-4">
             <Link
-              href={`/projects/${id}/selections`}
+              href={`/projects/${projectId}/selections`}
               className="inline-flex h-10 items-center rounded-xl border px-4 text-sm hover:bg-gray-50"
             >
               しおり
@@ -70,7 +73,9 @@ export default async function CandidatesPage({
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="grid h-full w-full place-items-center text-slate-400">No Photo</div>
+                  <div className="grid h-full w-full place-items-center text-slate-400">
+                    No Photo
+                  </div>
                 )}
               </div>
 
@@ -78,10 +83,32 @@ export default async function CandidatesPage({
                 <div className="font-medium line-clamp-1">{w.name}</div>
                 <div className="mt-1 text-xs text-slate-500">{w.prefecture}</div>
 
-                {/* 候補解除 or 確定へ */}
-                <div className="mt-3 flex items-center justify-between gap-2">
-                  <CandidateToggle projectId={id} placeId={w.placeId} initial={true} />
-                  <SelectToggle projectId={id} placeId={w.placeId} selected={Boolean(w.isSelected)} />
+                {/* 状態バッジ */}
+                <div className="mt-2 flex gap-2">
+                  {w.isCandidate && (
+                    <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs text-emerald-700">
+                      候補
+                    </span>
+                  )}
+                  {w.isSelected && (
+                    <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700">
+                      確定
+                    </span>
+                  )}
+                </div>
+
+                {/* アクション：候補／確定 */}
+                <div className="mt-3 flex gap-2">
+                  <CandidateToggle
+                    projectId={projectId}
+                    placeId={w.placeId}
+                    initial={Boolean(w.isCandidate)}
+                  />
+                  <SelectToggle
+                    projectId={projectId}
+                    placeId={w.placeId}
+                    selected={Boolean(w.isSelected)}
+                  />
                 </div>
               </div>
             </li>

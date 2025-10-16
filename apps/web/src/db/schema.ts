@@ -11,6 +11,7 @@ import {
   primaryKey,
   unique,
   date,
+  varchar,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -74,8 +75,11 @@ export const wishlists = pgTable(
   },
   (t) => ({
     uniqUserPlace: uniqueIndex("uniq_wishlists_user_place").on(t.userId, t.placeId),
+    // ★追加：自分のリストを新しい順で読むクエリ最適化
+    byUserCreated: index("idx_wishlists_user_created").on(t.userId, t.createdAt),
   })
 );
+
 
 export const trips = pgTable("trips", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -150,8 +154,10 @@ export const projectCandidates = pgTable(
     note: text("note"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => ({ uniq: unique().on(t.projectId, t.placeId) }),
-);
+  (t) => ({
+  uniquePair: uniqueIndex("project_candidates_unique").on(t.projectId, t.placeId),
+  byProject: index("idx_project_candidates_project").on(t.projectId),
+}));
 
 /** candidate_votes（任意：投票） */
 export const candidateVotes = pgTable(
@@ -169,16 +175,38 @@ export const candidateVotes = pgTable(
 export const projectSelections = pgTable(
   "project_selections",
   {
-    projectId: uuid("project_id").notNull().references(() => projects.id, { onDelete: "cascade" }),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
     placeId: text("place_id")
       .notNull()
       .references(() => places.placeId, { onDelete: "restrict" }),
-    dayIndex: integer("day_index"),
-    orderInDay: integer("order_in_day"),
+    // 並び用は NOT NULL にするのが理想（下のマイグレーションで段階的に）
+    dayIndex: integer("day_index"),       // ← 後で NOT NULL + default 0 に
+    orderInDay: integer("order_in_day"),  // ← 同上
     note: text("note"),
   },
-  (t) => ({ pk: primaryKey({ columns: [t.projectId, t.placeId] }) }),
+  (t) => ({
+    // 既存：同じplaceIdの二重確定を防止
+    pk: primaryKey({ columns: [t.projectId, t.placeId] }),
+
+    // ★追加：同日の同順番の重複を防止（並びの一意性）
+    uniqueSlot: uniqueIndex("project_selections_unique_slot").on(
+      t.projectId,
+      t.dayIndex,
+      t.orderInDay
+    ),
+
+    // ★追加：一覧・並び用の索引
+    byProject: index("idx_project_selections_project").on(t.projectId),
+    bySort: index("idx_project_selections_sort").on(
+      t.projectId,
+      t.dayIndex,
+      t.orderInDay
+    ),
+  })
 );
+
 // --- プロフィール（users 1:1） ---
 export const userProfiles = pgTable("user_profiles", {
   userId: uuid("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
