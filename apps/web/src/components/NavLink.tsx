@@ -31,7 +31,7 @@ function isActivePath(pathname: string, hrefStr: string, mode: ActiveMode) {
 export default function NavLink({
   href,
   children,
-  showSpinner = true,
+  showSpinner = false,
   className,
   activeClassName = "ring-2 ring-sky-500",
   baseClassName = "",
