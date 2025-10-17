@@ -32,13 +32,14 @@ export default function SelectionsBoard({
 
   async function persist(next: Day[]) {
     // payload を API が期待する形（items）で送る
-    const items: { placeId: string; dayIndex: number; orderInDay: number }[] = [];
+    const items: { placeId: string; dayIndex: number; orderInDay: number , note: string | null}[] = [];
     next.forEach((d) =>
       d.items.forEach((it, i) =>
         items.push({
           placeId: it.placeId,
           dayIndex: Number(d.dayIndex),
           orderInDay: Number(i),
+          note: it.note ?? null,
         })
       )
     );
