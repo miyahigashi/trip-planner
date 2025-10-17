@@ -11,13 +11,36 @@ type FriendRow = {
   avatarKey?: string | null;
 };
 
-export default function FriendPicker({ projectId }: { projectId: string }) {
+type Props = {
+  projectId: string;
+  /** 参加済みユーザーの userId。初期選択かつチェック不可にする */
+  initialSelectedIds?: string[];
+};
+
+export default function FriendPicker({
+  projectId,
+  initialSelectedIds = [],
+}: Props) {
   const [friends, setFriends] = useState<FriendRow[]>([]);
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<string | null>(null);
+
+  /** 選択状態 */
+  const [selected, setSelected] = useState<Set<string>>(
+    () => new Set(initialSelectedIds)
+  );
+  /** 参加済み(=ロック)集合。チェック不可にする */
+  const [locked, setLocked] = useState<Set<string>>(
+    () => new Set(initialSelectedIds)
+  );
+
+  // 親 props 変化に追随（ナビゲーションで切替え時など）
+  useEffect(() => {
+    setSelected(new Set(initialSelectedIds));
+    setLocked(new Set(initialSelectedIds));
+  }, [initialSelectedIds]);
 
   // 初回ロード
   useEffect(() => {
@@ -30,7 +53,7 @@ export default function FriendPicker({ projectId }: { projectId: string }) {
     })();
   }, []);
 
-  // フィルタ済み一覧
+  // フィルタ
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return friends;
@@ -41,16 +64,19 @@ export default function FriendPicker({ projectId }: { projectId: string }) {
   }, [friends, query]);
 
   const allIds = useMemo(() => filtered.map((f) => f.friendId), [filtered]);
+
+  // 表示中すべてが「選択済み or 参加済み」なら true
   const allSelectedInFiltered = useMemo(
-    () => allIds.length > 0 && allIds.every((id) => selected.has(id)),
-    [allIds, selected]
+    () => allIds.every((id) => selected.has(id) || locked.has(id)),
+    [allIds, selected, locked]
   );
 
   function toggle(id: string) {
+    // 参加済みは触らせない
+    if (locked.has(id)) return;
     setSelected((prev) => {
       const n = new Set(prev);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
+      n.has(id) ? n.delete(id) : n.add(id);
       return n;
     });
   }
@@ -59,30 +85,44 @@ export default function FriendPicker({ projectId }: { projectId: string }) {
     setSelected((prev) => {
       const n = new Set(prev);
       if (allSelectedInFiltered) {
-        // いま表示中の分だけ外す
-        allIds.forEach((id) => n.delete(id));
+        // 表示中で「参加済みではない」分だけ外す
+        allIds.forEach((id) => {
+          if (!locked.has(id)) n.delete(id);
+        });
       } else {
-        // いま表示中の分だけ追加
-        allIds.forEach((id) => n.add(id));
+        // 表示中で「参加済みではない」分だけ選ぶ
+        allIds.forEach((id) => {
+          if (!locked.has(id)) n.add(id);
+        });
       }
       return n;
     });
   }
 
   async function addSelected() {
-    if (selected.size === 0 || busy) return;
+    // 追加対象は「選択済み かつ 参加済みではない」
+    const payloadIds = Array.from(selected).filter((id) => !locked.has(id));
+    if (payloadIds.length === 0 || busy) return;
+
     setBusy(true);
     setMessage(null);
     try {
       const res = await fetch(`/api/projects/${projectId}/members/bulk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userIds: Array.from(selected) }),
+        body: JSON.stringify({ userIds: payloadIds }),
       });
       if (!res.ok) throw new Error("failed");
       const json = await res.json();
+
+      // 成功: 追加した分を locked に取り込み、選択をクリア
+      setLocked((prev) => {
+        const n = new Set(prev);
+        payloadIds.forEach((id) => n.add(id));
+        return n;
+      });
       setSelected(new Set());
-      setMessage(`追加しました：${json.added ?? 0}人`);
+      setMessage(`追加しました：${json.added ?? payloadIds.length}人`);
     } catch {
       setMessage("追加に失敗しました");
     } finally {
@@ -93,13 +133,10 @@ export default function FriendPicker({ projectId }: { projectId: string }) {
   // --- UI ---
   return (
     <section className="rounded-2xl border border-slate-200 bg-white shadow-sm ring-1 ring-black/5 overflow-hidden">
-      {/* 内側に p を移動して、子の影/丸みがカード外へ出ないようにする */}
       <div className="p-4 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-base font-semibold">友だちから追加</h2>
-          {message && (
-            <span className="text-xs text-slate-500">{message}</span>
-          )}
+          {message && <span className="text-xs text-slate-500">{message}</span>}
         </div>
 
         {/* 検索 */}
@@ -127,7 +164,7 @@ export default function FriendPicker({ projectId }: { projectId: string }) {
           <button
             type="button"
             onClick={addSelected}
-            disabled={busy || selected.size === 0}
+            disabled={busy || Array.from(selected).filter((id) => !locked.has(id)).length === 0}
             className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {busy ? (
@@ -144,29 +181,49 @@ export default function FriendPicker({ projectId }: { projectId: string }) {
 
         {/* リスト */}
         <div className="mt-1">
-          {/* loading/empty 分岐はそのまま */}
-          <ul className="grid gap-2 sm:grid-cols-2">
-            {filtered.map((u) => (
-              <li key={u.friendId} className="overflow-hidden"> {/* ← 追加 */}
-                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white px-3 py-2 shadow-sm transition hover:bg-slate-50">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-sky-600 shrink-0"
-                    checked={selected.has(u.friendId)}
-                    onChange={() => toggle(u.friendId)}
-                  />
-                  <UserCell row={u} />
-                </label>
-              </li>
-            ))}
-          </ul>
+          {loading ? (
+            <SkeletonList />
+          ) : (
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {filtered.map((u) => {
+                const isLocked = locked.has(u.friendId);
+                return (
+                  <li key={u.friendId} className="overflow-hidden">
+                    <label
+                      className={
+                        "flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-2 shadow-sm transition " +
+                        (isLocked
+                          ? "bg-slate-50 text-slate-400 cursor-not-allowed"
+                          : "bg-white hover:bg-slate-50")
+                      }
+                      title={isLocked ? "参加済み" : undefined}
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 accent-sky-600 shrink-0"
+                        checked={selected.has(u.friendId) || isLocked}
+                        disabled={isLocked || busy}
+                        onChange={() => toggle(u.friendId)}
+                      />
+                      <UserCell row={u} />
+                      {isLocked && (
+                        <span className="ml-auto rounded-full border px-2 py-0.5 text-[11px]">
+                          参加済み
+                        </span>
+                      )}
+                    </label>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </div>
     </section>
   );
 }
 
-/* ------- 小物 ------- */
+/* ------- 小物（既存のままでOK） ------- */
 
 function UserCell({ row }: { row: FriendRow }) {
   const name = row.displayName ?? row.email;

@@ -1,7 +1,7 @@
 // apps/web/src/lib/project-data.ts
 import "server-only";
 import { db } from "@/db/client";
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql,countDistinct } from "drizzle-orm";
 import {
   projects,
   users,
@@ -12,9 +12,14 @@ import {
   projectCandidates,
   projectSelections,
   projectCandidateVotes,
+  userProfiles,
 } from "@/db/schema";
-import { auth } from "@clerk/nextjs/server";
-
+export type Member = {
+  id: string;
+  name: string | null;
+  email: string | null;
+  avatarUrl: string | null;
+};
 /* ------------------------------ 共通SQL片 ------------------------------ */
 
 // 票数（0票でも 0 に）
@@ -110,94 +115,63 @@ export async function fetchProjectCandidatesPool(projectId: string) {
 }
 
 /** 候補だけ（共有候補タブ） */
-export async function fetchProjectCandidates(projectId: string, clerkUserId?: string) {
-  // メンバーと対象都道府県の絞り込み（既存ロジック）
-  const members = await db
-    .select({ userId: projectMembers.userId })
-    .from(projectMembers)
-    .where(eq(projectMembers.projectId, sql`${projectId}::uuid`));
+export async function fetchProjectCandidates(projectId: string, appUserId?: string) {
+  // appUserId 未ログイン時は false を返すSQL
+  const votedExpr = appUserId
+    ? sql<boolean>`exists(
+        select 1 from ${projectCandidateVotes} v
+        where v.project_id = ${projectId}
+          and v.place_id   = ${places.placeId}
+          and v.user_id    = ${appUserId}
+      )`
+    : sql<boolean>`false`;
 
-  const prefs = await db
-    .select({ prefecture: projectPrefectures.prefecture })
-    .from(projectPrefectures)
-    .where(eq(projectPrefectures.projectId, sql`${projectId}::uuid`));
-
-  const userIds = members.map(m => m.userId).filter(Boolean) as string[];
-  const prefList = prefs.map(p => p.prefecture);
-  if (userIds.length === 0 || prefList.length === 0) return [];
-
-  // 自分の users.id（votedByMe 判定用）
-  let me: string | null = null;
-  if (clerkUserId) {
-    const r = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.clerkUserId, clerkUserId))
-      .limit(1);
-    me = r[0]?.id ?? null;
-  }
-
-  const pcv = projectCandidateVotes;
-
-  return db
+  const rows = await db
     .select({
-      id: wishlists.id,
+      id: projectCandidates.id,
       placeId: places.placeId,
       name: places.name,
       prefecture: places.prefecture,
       imageUrl: places.imageUrl,
       photoRef: places.photoRef,
-      rating: places.rating,
-      userRatingsTotal: places.userRatingsTotal,
-      createdAt: wishlists.createdAt,
 
-      // 状態フラグ
-      isCandidate: sql<boolean>`true`,
-      isSelected:  sql<boolean>`(${projectSelections.placeId} is not null)`,
+      // 票数
+      votes: sql<number>`coalesce(count(distinct ${projectCandidateVotes.userId}), 0)`,
 
-      // ★ 集計列（重要）
-      votes: sql<number>`COALESCE(COUNT(DISTINCT ${pcv.userId}), 0)`,
-      votedByMe: me
-        ? sql<boolean>`
-            SUM(CASE WHEN ${pcv.userId} = ${sql`${me}::uuid`} THEN 1 ELSE 0 END) > 0
-          `
-        : sql<boolean>`false`,
+      // 自分が投票済みか
+      votedByMe: votedExpr,
+
+      // 既存の選択状態など
+      isSelected: sql<boolean>`(${projectSelections.placeId} is not null)`,
     })
-    .from(wishlists)
-    .innerJoin(places, eq(wishlists.placeId, places.placeId))
-    .innerJoin(
-      projectCandidates,
-      and(
-        eq(projectCandidates.projectId, sql`${projectId}::uuid`),
-        eq(projectCandidates.placeId, places.placeId)
-      )
-    )
+    .from(projectCandidates)
+    .innerJoin(places, eq(projectCandidates.placeId, places.placeId))
     .leftJoin(
       projectSelections,
       and(
-        eq(projectSelections.projectId, sql`${projectId}::uuid`),
-        eq(projectSelections.placeId, places.placeId)
+        eq(projectSelections.projectId, projectId),
+        eq(projectSelections.placeId, places.placeId),
       )
     )
     .leftJoin(
-      pcv,
+      projectCandidateVotes,
       and(
-        eq(pcv.projectId, sql`${projectId}::uuid`),
-        eq(pcv.placeId, places.placeId)
+        eq(projectCandidateVotes.projectId, projectId),
+        eq(projectCandidateVotes.placeId, places.placeId),
       )
     )
-    .where(and(
-      inArray(wishlists.userId, userIds),
-      inArray(places.prefecture, prefList),
-    ))
-    // 集計を使うので groupBy が必要
+    .where(eq(projectCandidates.projectId, projectId))
     .groupBy(
-      wishlists.id, places.placeId, places.name, places.prefecture,
-      places.imageUrl, places.photoRef, places.rating,
-      places.userRatingsTotal, wishlists.createdAt, projectSelections.placeId
-    )
-    .orderBy(desc(wishlists.createdAt))
-    .limit(100);
+      projectCandidates.id,
+      places.placeId,
+      places.name,
+      places.prefecture,
+      places.imageUrl,
+      places.photoRef,
+      projectSelections.placeId
+    );
+
+  return rows;
 }
 
 /** 確定だけ（確定タブ） */
@@ -294,6 +268,7 @@ export async function fetchSelections(projectId: string) {
       prefecture: places.prefecture,
       dayIndex: projectSelections.dayIndex,
       orderInDay: projectSelections.orderInDay,
+      note: projectSelections.note,
     })
     .from(projectSelections)
     .innerJoin(places, eq(projectSelections.placeId, places.placeId))
@@ -311,24 +286,31 @@ function toYmd(v: unknown): string | "" {
 
 /** プロジェクト基本情報 */
 export async function fetchProjectMeta(projectId: string) {
-  const [row] = await db
+  const [project] = await db
     .select({
-      startDate: projects.startDate,
-      endDate: projects.endDate,
+      id: projects.id,
       title: projects.title,
       description: projects.description,
+      startDate: projects.startDate,
+      endDate: projects.endDate,
     })
     .from(projects)
     .where(eq(projects.id, projectId))
     .limit(1);
 
-  if (!row) return null;
-  return {
-    startDate: toYmd(row.startDate),
-    endDate: toYmd(row.endDate),
-    title: row.title,
-    description: row.description,
-  };
+  const members = await db
+    .select({
+      id: users.id,
+      email: users.email,
+      name: userProfiles.displayName,
+      avatarUrl: userProfiles.avatarKey,
+    })
+    .from(projectMembers)
+    .innerJoin(users, eq(users.id, projectMembers.userId))
+    .leftJoin(userProfiles, eq(userProfiles.userId, users.id))
+    .where(eq(projectMembers.projectId, projectId));
+
+  return project ? { ...project, members } : null;
 }
 
 /* Clerk の ID → 内部 users.id */
@@ -342,24 +324,20 @@ async function byClerkId(clerkUserId: string) {
 }
 
 /** 自分の wishlists（対象都道府県のみ）。候補/確定フラグ・票情報付き */
-export async function fetchMyWishesForProject(projectId: string, clerkUserId: string) {
-  const me = await byClerkId(clerkUserId);
-  if (!me) return [];
-
+export async function fetchMyWishesForProject(projectId: string, userId: string) {
+  // プロジェクトに設定された都道府県
   const prefs = await db
     .select({ prefecture: projectPrefectures.prefecture })
     .from(projectPrefectures)
-    .where(eq(projectPrefectures.projectId, sql`${projectId}::uuid`));
+    .where(eq(projectPrefectures.projectId, projectId));
 
-  const prefList = prefs.map((p) => p.prefecture);
-  if (prefList.length === 0) return [];
+  const selectedPrefs = prefs.map(p => p.prefecture);
+  // 都道府県未設定なら全件（where 条件を外す）
+  const wherePref = selectedPrefs.length
+    ? inArray(places.prefecture, selectedPrefs)
+    : undefined;
 
-  // 自分が投票しているか（BOOL_OR）
-  const votedByMe = sql<boolean>`
-    COALESCE(BOOL_OR(${projectCandidateVotes.userId} = ${sql`${me}::uuid`}), false)
-  `;
-
-  return db
+  const rows = await db
     .select({
       id: wishlists.id,
       placeId: places.placeId,
@@ -367,39 +345,41 @@ export async function fetchMyWishesForProject(projectId: string, clerkUserId: st
       prefecture: places.prefecture,
       imageUrl: places.imageUrl,
       photoRef: places.photoRef,
-      rating: places.rating,
-      userRatingsTotal: places.userRatingsTotal,
-      isCandidate: sql<boolean>`(${projectCandidates.id} is not null)`,
-      isSelected: sql<boolean>`(${projectSelections.placeId} is not null)`,
-      votes: votesCount,
-      voters,
-      votedByMe,
+      isCandidate: sql<boolean>`${projectCandidates.placeId} is not null`,
+      isSelected:  sql<boolean>`${projectSelections.placeId} is not null`,
+      votes:       sql<number>`COALESCE(${countDistinct(projectCandidateVotes.userId)}, 0)`,
+      createdAt:   wishlists.createdAt,
     })
     .from(wishlists)
     .innerJoin(places, eq(wishlists.placeId, places.placeId))
+    // 👇 ここをすべて LEFT JOIN に
     .leftJoin(
       projectCandidates,
       and(
-        eq(projectCandidates.projectId, sql`${projectId}::uuid`),
-        eq(projectCandidates.placeId, places.placeId),
-      ),
+        eq(projectCandidates.projectId, projectId),
+        eq(projectCandidates.placeId, places.placeId)
+      )
     )
     .leftJoin(
       projectSelections,
       and(
-        eq(projectSelections.projectId, sql`${projectId}::uuid`),
-        eq(projectSelections.placeId, places.placeId),
-      ),
+        eq(projectSelections.projectId, projectId),
+        eq(projectSelections.placeId, places.placeId)
+      )
     )
     .leftJoin(
       projectCandidateVotes,
       and(
-        eq(projectCandidateVotes.projectId, sql`${projectId}::uuid`),
-        eq(projectCandidateVotes.placeId, places.placeId),
-      ),
+        eq(projectCandidateVotes.projectId, projectId),
+        eq(projectCandidateVotes.placeId, places.placeId)
+      )
     )
-    .leftJoin(users, eq(users.id, projectCandidateVotes.userId))
-    .where(and(eq(wishlists.userId, sql`${me}::uuid`), inArray(places.prefecture, prefList)))
+    .where(
+      and(
+        eq(wishlists.userId, userId),
+        wherePref ?? sql`true`
+      )
+    )
     .groupBy(
       wishlists.id,
       places.placeId,
@@ -407,11 +387,40 @@ export async function fetchMyWishesForProject(projectId: string, clerkUserId: st
       places.prefecture,
       places.imageUrl,
       places.photoRef,
-      places.rating,
-      places.userRatingsTotal,
-      projectCandidates.id,
+      projectCandidates.placeId,
       projectSelections.placeId,
+      wishlists.createdAt
     )
-    .orderBy(desc(wishlists.createdAt))
-    .limit(200);
+    .orderBy(desc(wishlists.createdAt));
+
+  return rows;
+}
+
+export async function fetchProjectPrefectures(projectId: string) {
+  const rows = await db
+    .select({ prefecture: projectPrefectures.prefecture })
+    .from(projectPrefectures)
+    .where(eq(projectPrefectures.projectId, projectId));
+  return rows.map(r => r.prefecture);
+}
+
+export async function fetchProjectMembers(projectId: string): Promise<Member[]> {
+  const rows = await db
+    .select({
+      id: users.id,
+      name: userProfiles.displayName,
+      email: users.email,
+      avatarUrl: userProfiles.avatarKey,
+    })
+    .from(projectMembers)                               // ★ ここを起点にする
+    .innerJoin(users, eq(users.id, projectMembers.userId))
+    .leftJoin(userProfiles, eq(userProfiles.userId, users.id))
+    .where(eq(projectMembers.projectId, projectId));    // ★ 参照 OK
+
+  return rows.map(r => ({
+    id: r.id,
+    name: r.name ?? null,
+    email: r.email ?? null,
+    avatarUrl: r.avatarUrl ?? null,
+  }));
 }

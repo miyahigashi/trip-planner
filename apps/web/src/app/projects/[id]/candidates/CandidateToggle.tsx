@@ -1,52 +1,100 @@
 "use client";
-
+// apps/web/src/app/projects/[id]/candidates/CandidateToggle.tsx
+import * as React from "react";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useConfirm } from "@/components/Confirm";
+
+type ButtonProps = React.ComponentProps<"button">;
+
+type Props = {
+  projectId: string;
+  placeId: string;
+  initial: boolean;              // 初期の候補状態
+  isSelected?: boolean;          // 確定中なら解除確認に使用
+  className?: string;
+
+  // controlled props
+  pressed?: boolean;
+  onPressedChange?: (next: boolean) => void;
+} & Omit<ButtonProps, "onClick" | "disabled" | "children" | "value">;
+
+function cn(...xs: Array<string | false | null | undefined>) {
+  return xs.filter(Boolean).join(" ");
+}
 
 export default function CandidateToggle({
   projectId,
   placeId,
-  initial,           // 現在「候補か」
-  isSelected = false // 現在「確定か」（バッジ表示用に既に持っているはず）
-}: {
-  projectId: string;
-  placeId: string;
-  initial: boolean;
-  isSelected?: boolean;
-}) {
+  initial,
+  isSelected = false,
+  className,
+  pressed,
+  onPressedChange,
+  ...rest
+}: Props) {
   const router = useRouter();
-  const [isOn, setOn] = useState(initial);
-  const [pending, start] = useTransition();
+  const confirm = useConfirm();
 
-  const add = () =>
-    start(async () => {
-      setOn(true);
+  // ✅ 通信中の管理は自前
+  const [isMutating, setIsMutating] = useState(false);
+  // ✅ 画面再取得だけをトランジションに
+  const [isRefreshing, startTransition] = useTransition();
+
+  // controlled / uncontrolled 両対応
+  const isControlled =
+    typeof pressed === "boolean" && typeof onPressedChange === "function";
+  const [internal, setInternal] = useState(initial);
+  const isOn = isControlled ? (pressed as boolean) : internal;
+
+  const setNext = (next: boolean) => {
+    if (isControlled) onPressedChange?.(next);
+    else setInternal(next);
+  };
+
+  const add = async () => {
+    setIsMutating(true);
+    const prev = isOn;
+    try {
+      setNext(true); // 楽観更新
       const r = await fetch(`/api/projects/${projectId}/candidates`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ placeId }),
       });
       if (!r.ok) {
-        setOn(false);
-        alert("候補に追加できませんでした");
-        return;
+        setNext(prev);
+        throw new Error("候補に追加できませんでした");
       }
-      router.refresh();
-    });
+      startTransition(() => router.refresh());
+    } catch (e) {
+      // 必要ならトーストなどに置き換え
+      alert((e as Error).message);
+    } finally {
+      setIsMutating(false);
+    }
+  };
 
-  const remove = () =>
-    start(async () => {
-      // もし確定中なら、同時に確定も解除するか確認
+  const remove = async () => {
+    setIsMutating(true);
+    const prev = isOn;
+    try {
       let alsoUnselect = false;
       if (isSelected) {
-        const ok = window.confirm(
-          "このスポットは現在『確定』にも入っています。\n候補を取り消すと同時に、確定からも外しますか？"
-        );
-        if (!ok) return;
+        const ok = await confirm({
+          title: "確認",
+          description:
+            "このスポットは現在『確定』にも入っています。\n候補を取り消すと同時に、確定からも外しますか？",
+          confirmText: "OK",
+          cancelText: "キャンセル",
+          tone: "danger",
+        });
+        if (!ok) return; // finally で解除される
         alsoUnselect = true;
       }
 
-      setOn(false);
+      setNext(false); // 楽観更新
+
       const url = new URL(
         `/api/projects/${projectId}/candidates`,
         window.location.origin
@@ -56,30 +104,40 @@ export default function CandidateToggle({
 
       const r = await fetch(url.toString(), { method: "DELETE" });
       if (!r.ok) {
-        setOn(true);
-        alert("候補を取り消せませんでした");
-        return;
+        setNext(prev);
+        throw new Error("候補を取り消せませんでした");
       }
-      router.refresh();
-    });
+      startTransition(() => router.refresh());
+    } catch (e) {
+      alert((e as Error).message);
+    } finally {
+      setIsMutating(false);
+    }
+  };
 
-  return isOn ? (
+  const disabled = isMutating || isRefreshing;
+
+  return (
     <button
-      className="rounded-lg border px-3 py-1.5 text-sm bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50"
-      onClick={remove}
-      disabled={pending}
-      aria-label="候補を取り消す"
+      onClick={isOn ? remove : add}
+      disabled={disabled}
+      aria-pressed={isOn}
+      className={cn(
+        "h-10 rounded-lg px-3 text-sm text-center whitespace-nowrap transition disabled:opacity-50 disabled:cursor-not-allowed",
+        isOn
+          ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
+          : "border hover:bg-gray-50",
+        className
+      )}
+      {...rest}
     >
-      {pending ? "処理中…" : "✓ 候補（取り消す）"}
-    </button>
-  ) : (
-    <button
-      className="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
-      onClick={add}
-      disabled={pending}
-      aria-label="候補に追加"
-    >
-      {pending ? "追加中…" : "候補に追加"}
+      {isOn
+        ? disabled
+          ? "処理中…"
+          : "✓ 候補（取り消す）"
+        : disabled
+          ? "追加中…"
+          : "候補にする"}
     </button>
   );
 }

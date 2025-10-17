@@ -1,24 +1,34 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useConfirm } from "@/components/Confirm";
 
 type Props = {
   projectId: string;
   placeId: string;
-  selected: boolean;              // 現在「確定」状態か
-  // 確定→取り消し時に候補からも外す確認を出す場合は true
+  selected: boolean;
   confirmDemote?: boolean;
+  className?: string;
 };
+
+function cn(...xs: Array<string | false | null | undefined>) {
+  return xs.filter(Boolean).join(" ");
+}
 
 export default function SelectToggle({
   projectId,
   placeId,
   selected,
   confirmDemote = false,
+  className,
 }: Props) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const confirm = useConfirm();
+
+  // ✅ 通信中はこれで管理（useTransitionはUIのrefreshだけに使う）
+  const [isMutating, setIsMutating] = useState(false);
+  const [isRefreshing, startTransition] = useTransition();
 
   const call = (action: "select" | "unselect" | "unselect_and_uncandidate") =>
     fetch(`/api/projects/${projectId}/selections/toggle`, {
@@ -28,41 +38,71 @@ export default function SelectToggle({
       body: JSON.stringify({ placeId, action }),
     });
 
-  const onSelect = () =>
-    startTransition(async () => {
-      await call("select");
-      router.refresh(); // SSR一覧を再取得
-    });
+  const onSelect = async () => {
+    setIsMutating(true);
+    try {
+      const r = await call("select");
+      if (!r.ok) throw new Error("failed");
+      // UIの再取得だけをトランジションに
+      startTransition(() => router.refresh());
+    } finally {
+      setIsMutating(false);
+    }
+  };
 
-  const onUnselect = () =>
-    startTransition(async () => {
+  const onUnselect = async () => {
+    setIsMutating(true);
+    try {
       let action: "unselect" | "unselect_and_uncandidate" = "unselect";
       if (confirmDemote) {
-        const ok = window.confirm(
-          "確定を取り消して候補からも外しますか？（OKで両方解除）"
-        );
-        if (!ok) return;
+        const ok = await confirm({
+          title: "確認",
+          description: "確定を取り消して候補からも外しますか？（OKで両方解除）",
+          confirmText: "OK",
+          cancelText: "キャンセル",
+          tone: "danger",
+        });
+        if (!ok) return; // ❗️ finally で isMutating は戻る
         action = "unselect_and_uncandidate";
       }
-      await call(action);
-      router.refresh();
-    });
+      const r = await call(action);
+      if (!r.ok) throw new Error("failed");
+      startTransition(() => router.refresh());
+    } finally {
+      setIsMutating(false);
+    }
+  };
 
-  return selected ? (
+  const base =
+    "h-10 w-full rounded-lg px-3 text-sm font-semibold text-center whitespace-nowrap transition disabled:opacity-50 disabled:cursor-not-allowed";
+  const variant = selected
+    ? "bg-indigo-600 text-white hover:bg-indigo-700"
+    : "border hover:bg-gray-50";
+
+  const disabled = isMutating || isRefreshing;
+
+  return (
     <button
-      onClick={onUnselect}
-      disabled={pending}
-      className="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-50 disabled:opacity-50"
+      onClick={selected ? onUnselect : onSelect}
+      disabled={disabled}
+      aria-pressed={selected}
+      className={cn(base, variant, className)}
     >
-      {pending ? "取り消し中…" : "確定を取り消す"}
-    </button>
-  ) : (
-    <button
-      onClick={onSelect}
-      disabled={pending}
-      className="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
-    >
-      {pending ? "追加中…" : "確定にする"}
+      {selected ? (
+        <>
+          <span className="sm:hidden">{disabled ? "解除中…" : "確定解除"}</span>
+          <span className="hidden sm:inline">
+            {disabled ? "取り消し中…" : "確定を取り消す"}
+          </span>
+        </>
+      ) : (
+        <>
+          <span className="sm:hidden">{disabled ? "追加中…" : "確定にする"}</span>
+          <span className="hidden sm:inline">
+            {disabled ? "追加中…" : "確定にする"}
+          </span>
+        </>
+      )}
     </button>
   );
 }

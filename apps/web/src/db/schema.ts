@@ -13,7 +13,8 @@ import {
   date,
   varchar,
 } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+import { sql, relations } from "drizzle-orm";
+
 
 /** users */
 export const users = pgTable(
@@ -248,3 +249,25 @@ export const projectCandidateVotes = pgTable(
     uniq: uniqueIndex("uniq_vote_per_user").on(t.projectId, t.placeId, t.userId),
   })
 );
+
+// users から project_candidate_votes への 1:N
+export const usersRelations = relations(users, ({ many }) => ({
+  projectCandidateVotes: many(projectCandidateVotes),
+}));
+
+// project_candidate_votes 側からの参照（N:1）
+
+export const projectCandidateVotesRelations = relations(projectCandidateVotes, ({ one }) => ({
+  user: one(users, {
+    fields: [projectCandidateVotes.userId],
+    references: [users.id],
+  }),
+  project: one(projects, {
+    fields: [projectCandidateVotes.projectId],
+    references: [projects.id],
+  }),
+  place: one(places, {
+    fields: [projectCandidateVotes.placeId],
+    references: [places.placeId],
+  }),
+}));

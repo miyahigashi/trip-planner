@@ -7,6 +7,7 @@ import Providers from "./providers";
 import ClientHeader from "./client-header";
 import ClientFooter from "./client-footer";
 import { ProgressProvider } from "@/components/nav-progress/ProgressContext";
+import { ConfirmProvider } from "@/components/Confirm";
 
 const noto = Noto_Sans_JP({
   subsets: ["latin"],
@@ -34,26 +35,28 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div aria-hidden className="pointer-events-none fixed inset-0 z-0 opacity-[0.08] bg-map-grid" />
 
         <Providers>
-          {/* ★ ここから進行バーのコンテキスト。Headerより上でOK */}
-          <ProgressProvider>
-            <ClientHeader />
+          <ConfirmProvider>
+            {/* ★ ここから進行バーのコンテキスト。Headerより上でOK */}
+            <ProgressProvider>
+              <ClientHeader />
 
-            {/* 本文 */}
-            <main
-              className="relative z-10 mx-auto max-w-6xl px-4 pt-2 md:pt-4
-                         pb-[calc(56px+env(safe-area-inset-bottom))]"
-            >
-              <div
-                className="rounded-2xl border border-white/60 bg-white/80 p-3 sm:p-4 shadow-xl
-                           backdrop-blur supports-[backdrop-filter]:bg-white/60"
-                style={{ borderImage: "linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.35)) 1" }}
+              {/* 本文 */}
+              <main
+                className="relative z-10 mx-auto max-w-6xl px-4 pt-2 md:pt-4
+                          pb-[calc(56px+env(safe-area-inset-bottom))]"
               >
-                {children}
-              </div>
-            </main>
+                <div
+                  className="rounded-2xl border border-white/60 bg-white/80 p-3 sm:p-4 shadow-xl
+                            backdrop-blur supports-[backdrop-filter]:bg-white/60"
+                  style={{ borderImage: "linear-gradient(180deg, rgba(255,255,255,.7), rgba(255,255,255,.35)) 1" }}
+                >
+                  {children}
+                </div>
+              </main>
 
-            <ClientFooter />
-          </ProgressProvider>
+              <ClientFooter />
+            </ProgressProvider>
+          </ConfirmProvider>
         </Providers>
       </body>
     </html>

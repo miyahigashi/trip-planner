@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev -H 0.0.0.0 -p 3000",
     "dev:https": "vercel dev --secure --port 3000",
     "preview": "pnpm build && pnpm start",
     "build": "next build",

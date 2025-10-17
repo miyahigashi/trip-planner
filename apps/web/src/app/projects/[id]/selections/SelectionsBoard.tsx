@@ -3,6 +3,7 @@
 import Image from "next/image";
 import SignedImage from "@/components/SignedImage";
 import { useState, useTransition } from "react";
+import NoteButton from "./NoteButton";
 
 type Item = {
   placeId: string;
@@ -10,6 +11,7 @@ type Item = {
   prefecture: string | null;
   imageUrl: string | null;
   photoRef: string | null;
+  note: string | null;
 };
 type Day = { dayIndex: number; items: Item[] };
 
@@ -104,18 +106,19 @@ export default function SelectionsBoard({
     next.sort((a, b) => a.dayIndex - b.dayIndex);
     save(next);
   };
+  function patchNote(placeId: string, nextNote: string | null) {
+  setDays((prev) =>
+    prev.map((d) => ({
+      ...d,
+      items: d.items.map((it) =>
+        it.placeId === placeId ? { ...it, note: nextNote } : it
+      ),
+    }))
+  );
+}
 
   return (
     <div className="mt-6 space-y-6">
-      <div className="flex justify-end">
-        <button
-          className="rounded-lg border px-3 py-2 text-sm hover:bg-gray-50"
-          onClick={addDay}
-          disabled={isPending}
-        >
-          + Day を追加
-        </button>
-      </div>
 
       {days.map((d) => (
         <section key={d.dayIndex} className="space-y-3">
@@ -153,6 +156,13 @@ export default function SelectionsBoard({
                         className="h-full w-full object-cover"
                       />
                     )}
+                    <NoteButton
+                      projectId={projectId}
+                      placeId={it.placeId}
+                      initialNote={it.note ?? null}
+                      className="absolute right-3 top-3" // 置きたい位置に
+                      onSaved={(n) => patchNote(it.placeId, n)}
+                    />
                   </div>
 
                   <div className="p-3">
@@ -160,40 +170,71 @@ export default function SelectionsBoard({
                     <div className="text-xs text-slate-500 mt-1">
                       {it.prefecture}
                     </div>
+                    {it.note && (
+                      <div className="mt-2 rounded-lg bg-amber-50/70 ring-1 ring-amber-200 px-3 py-2 text-sm text-amber-900">
+                        <span className="mr-1">📝</span>
+                        <span className="whitespace-pre-wrap break-words">{it.note}</span>
+                      </div>
+                    )}
+                    {/* --- アクションバー（置き換え） --- */}
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                        {/* 上/下（小ボタン） */}
+                        <div className="flex gap-2">
+                          <button
+                            aria-label="上へ"
+                            onClick={() => moveUp(d.dayIndex, i)}
+                            disabled={isPending || i === 0}
+                            className={[
+                              "inline-flex h-9 min-w-9 items-center justify-center rounded-lg border",
+                              "bg-white px-2 text-sm shadow-sm hover:bg-slate-50",
+                              "disabled:opacity-50 disabled:cursor-not-allowed",
+                            ].join(" ")}
+                          >
+                            ▲
+                          </button>
+                          <button
+                            aria-label="下へ"
+                            onClick={() => moveDown(d.dayIndex, i)}
+                            disabled={isPending || i === d.items.length - 1}
+                            className={[
+                              "inline-flex h-9 min-w-9 items-center justify-center rounded-lg border",
+                              "bg-white px-2 text-sm shadow-sm hover:bg-slate-50",
+                              "disabled:opacity-50 disabled:cursor-not-allowed",
+                            ].join(" ")}
+                          >
+                            ▼
+                          </button>
+                        </div>
 
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <button
-                        className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
-                        onClick={() => moveUp(d.dayIndex, i)}
-                        disabled={isPending || i === 0}
-                      >
-                        ↑ 上へ
-                      </button>
-                      <button
-                        className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
-                        onClick={() => moveDown(d.dayIndex, i)}
-                        disabled={isPending || i === d.items.length - 1}
-                      >
-                        ↓ 下へ
-                      </button>
-                      <button
-                        className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
-                        onClick={() => moveToDay(d.dayIndex, i, d.dayIndex - 1)}
-                        disabled={
-                          isPending ||
-                          d.dayIndex === Math.min(...days.map((x) => x.dayIndex))
-                        }
-                      >
-                        ◀ 前日へ
-                      </button>
-                      <button
-                        className="rounded-lg border px-2 py-1 text-xs hover:bg-gray-50"
-                        onClick={() => moveToDay(d.dayIndex, i, d.dayIndex + 1)}
-                        disabled={isPending}
-                      >
-                        次日へ ▶
-                      </button>
-                    </div>
+                        {/* 前日/次日（セグメント） */}
+                        <div className="flex items-center rounded-full border bg-white p-0.5 shadow-sm">
+                          <button
+                            onClick={() => moveToDay(d.dayIndex, i, d.dayIndex - 1)}
+                            disabled={
+                              isPending || d.dayIndex === Math.min(...days.map((x) => x.dayIndex))
+                            }
+                            className={[
+                              "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm",
+                              "hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed",
+                            ].join(" ")}
+                          >
+                            <span className="-ml-0.5">◀</span> 前日
+                          </button>
+
+                          <span className="mx-0.5 h-6 w-px bg-slate-200" aria-hidden />
+
+                          <button
+                            onClick={() => moveToDay(d.dayIndex, i, d.dayIndex + 1)}
+                            disabled={isPending}
+                            className={[
+                              "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm",
+                              "hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed",
+                            ].join(" ")}
+                          >
+                            次日 <span className="-mr-0.5">▶</span>
+                          </button>
+                        </div>
+                      </div>
                   </div>
                 </li>
               ))}

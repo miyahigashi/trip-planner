@@ -1,14 +1,28 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+
+// 都道府県一覧（必要に応じて短縮可能）
+const PREFS = [
+  "北海道","青森県","岩手県","宮城県","秋田県","山形県","福島県",
+  "茨城県","栃木県","群馬県","埼玉県","千葉県","東京都","神奈川県",
+  "新潟県","富山県","石川県","福井県","山梨県","長野県",
+  "岐阜県","静岡県","愛知県","三重県",
+  "滋賀県","京都府","大阪府","兵庫県","奈良県","和歌山県",
+  "鳥取県","島根県","岡山県","広島県","山口県",
+  "徳島県","香川県","愛媛県","高知県",
+  "福岡県","佐賀県","長崎県","熊本県","大分県","宮崎県","鹿児島県","沖縄県",
+];
 
 type Props = {
   projectId: string;
   initialTitle?: string;
   initialDescription?: string;
-  initialStartDate?: string; // YYYY-MM-DD
-  initialEndDate?: string;   // YYYY-MM-DD
+  initialStartDate?: string;
+  initialEndDate?: string;
+  /** ← 追加: 既に設定済みの都道府県 */
+  initialPrefectures?: string[];
 };
 
 export default function EditProjectButton({
@@ -17,40 +31,52 @@ export default function EditProjectButton({
   initialDescription = "",
   initialStartDate = "",
   initialEndDate = "",
+  initialPrefectures = [],
 }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
 
-  // フォーム値
+  // form state
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [emails, setEmails] = useState(""); // カンマ/空白区切り
+  const [prefectures, setPrefectures] = useState<string[]>([]);
 
-  // 初期値を反映
+  // 初期値反映
   useEffect(() => {
     setTitle(initialTitle);
     setDescription(initialDescription);
     setStartDate(initialStartDate);
     setEndDate(initialEndDate);
-  }, [initialTitle, initialDescription, initialStartDate, initialEndDate]);
+    setPrefectures(initialPrefectures);
+  }, [initialTitle, initialDescription, initialStartDate, initialEndDate, initialPrefectures]);
 
-  // 送信処理
-  function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    // 軽いバリデーション
-    if (startDate && endDate && startDate > endDate) {
-      alert("終了日は開始日以降を指定してください。");
-      return;
+  // バリデーション
+  const errors = useMemo(() => {
+    const es: string[] = [];
+    if (!title.trim()) es.push("タイトルは必須です。");
+    if (!startDate || !endDate) {
+      es.push("開始日と終了日は必須です。");
+    } else if (startDate > endDate) {
+      es.push("終了日は開始日以降を指定してください。");
     }
+    if (prefectures.length < 1) es.push("都道府県を1つ以上選択してください。");
+    return es;
+  }, [title, startDate, endDate, prefectures]);
 
-    const inviteEmails = emails
-      .split(/[,\s]+/)
-      .map((s) => s.trim())
-      .filter(Boolean);
+  const isValid = errors.length === 0;
+
+  function togglePref(p: string) {
+    setPrefectures((prev) =>
+      prev.includes(p) ? prev.filter((x) => x !== p) : [...prev, p]
+    );
+  }
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!isValid) return;
 
     start(async () => {
       try {
@@ -61,37 +87,31 @@ export default function EditProjectButton({
             headers: { "Content-Type": "application/json" },
             cache: "no-store",
             body: JSON.stringify({
-              title: title?.trim() || null,
-              description: description?.trim() || null,
-              startDate: startDate || null,
-              endDate: endDate || null,
+              title: title.trim(),
+              description: description.trim() || null,
+              startDate,
+              endDate,
             }),
           });
-          if (!res.ok) {
-            const msg = await safeMsg(res);
-            throw new Error(msg || "プロジェクトの更新に失敗しました。");
-          }
+          if (!res.ok) throw new Error((await safeMsg(res)) || "プロジェクトの更新に失敗しました。");
         }
 
-        // 2) メンバー招待
-        if (inviteEmails.length > 0) {
-          const res2 = await fetch(`/api/projects/${projectId}/members/bulk`, {
-            method: "POST",
+        // 2) 都道府県更新（必須）
+        {
+          const res = await fetch(`/api/projects/${projectId}/prefectures`, {
+            method: "PUT",
             headers: { "Content-Type": "application/json" },
             cache: "no-store",
-            body: JSON.stringify({ emails: inviteEmails }),
+            body: JSON.stringify({ prefectures }),
           });
-          if (!res2.ok) {
-            const msg = await safeMsg(res2);
-            throw new Error(msg || "メンバーの追加に失敗しました。");
-          }
+          if (!res.ok) throw new Error((await safeMsg(res)) || "都道府県の更新に失敗しました。");
         }
 
         setOpen(false);
         router.refresh();
       } catch (err: unknown) {
-        console.error("[EditProjectButton] submit failed:", err);
         alert(err instanceof Error ? err.message : "保存に失敗しました。");
+        console.error("[EditProjectButton] submit failed:", err);
       }
     });
   }
@@ -103,108 +123,151 @@ export default function EditProjectButton({
         className="inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-50"
         onClick={() => setOpen(true)}
       >
-        ✏️ 編集
+        ⚙️ 設定
       </button>
 
       {open && (
         <div
-          className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4"
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
           onClick={() => !pending && setOpen(false)}
         >
-          <div
-            className="w-full max-w-lg rounded-2xl bg-white p-4 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-base font-semibold">プロジェクトを編集</h3>
-              <button
-                type="button"
-                className="text-slate-500 hover:text-slate-700"
-                onClick={() => setOpen(false)}
-                disabled={pending}
-                aria-label="閉じる"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={onSubmit} className="space-y-4">
-              {/* タイトル */}
-              <label className="block text-sm">
-                <span className="mb-1 block text-slate-600">タイトル</span>
-                <input
-                  type="text"
-                  className="w-full rounded-lg border px-3 py-2"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="旅のタイトル"
-                />
-              </label>
-
-              {/* 説明 */}
-              <label className="block text-sm">
-                <span className="mb-1 block text-slate-600">説明</span>
-                <textarea
-                  className="h-24 w-full rounded-lg border px-3 py-2"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="プランのメモや共有メッセージなど"
-                />
-              </label>
-
-              {/* 日付 */}
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="block text-sm">
-                  <span className="mb-1 block text-slate-600">開始日</span>
-                  <input
-                    type="date"
-                    className="w-full rounded-lg border px-3 py-2"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                  />
-                </label>
-                <label className="block text-sm">
-                  <span className="mb-1 block text-slate-600">終了日</span>
-                  <input
-                    type="date"
-                    className="w-full rounded-lg border px-3 py-2"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                  />
-                </label>
-              </div>
-
-              {/* 共同編集者 */}
-              <label className="block text-sm">
-                <span className="mb-1 block text-slate-600">
-                  ユーザー追加（メール複数可・カンマ/空白区切り）
-                </span>
-                <textarea
-                  className="h-24 w-full rounded-lg border px-3 py-2"
-                  placeholder="alice@example.com, bob@example.com"
-                  value={emails}
-                  onChange={(e) => setEmails(e.target.value)}
-                />
-              </label>
-
-              <div className="flex justify-end gap-2 pt-2">
+          <div className="flex min-h-[100svh] items-center justify-center p-4">
+            <div
+              className="w-full max-w-lg max-h-[min(90svh,680px)] flex flex-col overflow-hidden rounded-2xl bg-white shadow-xl ring-1 ring-black/5"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label="設定の変更"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between gap-3 border-b px-4 py-3">
+                <h3 className="text-base font-semibold">設定の変更</h3>
                 <button
                   type="button"
-                  className="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-50"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100"
                   onClick={() => setOpen(false)}
                   disabled={pending}
                 >
-                  キャンセル
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
-                  disabled={pending}
-                >
-                  {pending ? "保存中…" : "保存"}
+                  ✕
                 </button>
               </div>
-            </form>
+
+              {/* Body */}
+              <form onSubmit={onSubmit} className="flex-1 overflow-y-auto">
+                <div className="space-y-4 px-4 py-3">
+                  {/* タイトル（必須） */}
+                  <label className="block text-sm">
+                    <span className="mb-1 block text-slate-600">タイトル<span className="text-rose-600">*</span></span>
+                    <input
+                      type="text"
+                      className="w-full rounded-lg border px-3 py-2"
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="旅のタイトル"
+                      required
+                    />
+                  </label>
+
+                  {/* 説明 */}
+                  <label className="block text-sm">
+                    <span className="mb-1 block text-slate-600">説明</span>
+                    <textarea
+                      className="h-24 w-full rounded-lg border px-3 py-2"
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="プランのメモや共有メッセージなど"
+                    />
+                  </label>
+
+                  {/* 日付（必須） */}
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block text-sm">
+                      <span className="mb-1 block text-slate-600">開始日<span className="text-rose-600">*</span></span>
+                      <input
+                        type="date"
+                        className="w-full rounded-lg border px-3 py-2"
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        required
+                      />
+                    </label>
+                    <label className="block text-sm">
+                      <span className="mb-1 block text-slate-600">終了日<span className="text-rose-600">*</span></span>
+                      <input
+                        type="date"
+                        className="w-full rounded-lg border px-3 py-2"
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        required
+                      />
+                    </label>
+                  </div>
+
+                  {/* 都道府県（1つ以上必須） */}
+                  <div className="text-sm">
+                    <div className="mb-1 text-slate-600">
+                      都道府県 <span className="text-rose-600">*</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {PREFS.map((p) => {
+                        const checked = prefectures.includes(p);
+                        return (
+                          <label
+                            key={p}
+                            className={`cursor-pointer select-none rounded-full border px-3 py-1 ${
+                              checked
+                                ? "bg-sky-600 text-white border-sky-600"
+                                : "bg-white text-slate-700 hover:bg-slate-50"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              className="sr-only"
+                              checked={checked}
+                              onChange={() => togglePref(p)}
+                            />
+                            {p}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* エラー表示 */}
+                  {errors.length > 0 && (
+                    <ul className="space-y-1 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                      {errors.map((e) => (
+                        <li key={e}>• {e}</li>
+                      ))}
+                    </ul>
+                  )}
+
+                  {/* フッターに隠れない余白 */}
+                  <div className="pb-24" />
+                </div>
+
+                {/* Footer */}
+                <div className="sticky bottom-0 border-t bg-white/95 px-4 py-3 backdrop-blur pb-[calc(env(safe-area-inset-bottom)+0.25rem)]">
+                  <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      className="rounded-lg border px-3 py-1.5 text-sm hover:bg-gray-50"
+                      onClick={() => setOpen(false)}
+                      disabled={pending}
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      type="submit"
+                      className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                      disabled={pending || !isValid}
+                    >
+                      {pending ? "保存中…" : "保存"}
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
@@ -216,10 +279,10 @@ export default function EditProjectButton({
 async function safeMsg(res: Response): Promise<string | null> {
   try {
     const data = await res.json();
-    return typeof data?.error === "string"
-      ? data.error
-      : typeof data?.message === "string"
-      ? data.message
+    return typeof (data as any)?.error === "string"
+      ? (data as any).error
+      : typeof (data as any)?.message === "string"
+      ? (data as any).message
       : null;
   } catch {
     try {
